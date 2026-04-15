@@ -1,0 +1,4 @@
+".\Objects\main.obj",
+".\Objects\SoundPlay.obj" 
+TO ".\Objects\STC15" 
+PRINT(".\Listings\STC15.m51") RAMSIZE(256) 
