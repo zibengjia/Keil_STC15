@@ -35,6 +35,6 @@
 
 void IO_Init(void);
 unsigned char Key_Scan(void);
-void Key_Process(void);
+
 
 #endif

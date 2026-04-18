@@ -1,0 +1,309 @@
+C51 COMPILER V9.59.0.0   DS1302                                                            04/18/2026 23:02:51 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DS1302
+OBJECT MODULE PLACED IN .\Objects\DS1302.obj
+COMPILER INVOKED BY: C:\Users\Luna\AppData\Local\Keil_v5\C51\BIN\C51.EXE DS1302.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTE
+                    -XTEND PRINT(.\Listings\DS1302.lst) OBJECT(.\Objects\DS1302.obj)
+
+line level    source
+
+   1          #include "ds1302.h"
+   2          #include <intrins.h>
+   3          // 秒    分    时    日    月   星期   年
+   4          // 初始化时间                                                              //0         30    8          2     1       1      17
+   5          unsigned char code Init[7] = {0x00, 0x30, 0x08, 0x02, 0x01, 0x01, 0x17};
+   6          
+   7          /***********************************************
+   8          函数名称：Delay_us
+   9          功    能：STC 1T单片机1us延时程序
+  10          入口参数：us:延时的微秒数
+  11          返 回 值：无
+  12          备    注：外部时钟11.0592MHz
+  13          ************************************************/
+  14          void Delay_us(unsigned int us)
+  15          {
+  16   1          while (us--) {
+  17   2              _nop_();
+  18   2          }
+  19   1      }
+  20          /***********************************************
+  21          函数名称：DS1302_ReadByte
+  22          功    能：从DS1302读一个字节数据
+  23          入口参数：无
+  24          返 回 值：unsigned char：读出的数据
+  25          备    注：无
+  26          ************************************************/
+  27          unsigned char DS1302_ReadByte(void)
+  28          {
+  29   1          unsigned char i;
+  30   1          unsigned char dat = 0;
+  31   1          for (i = 0; i < 8; i++) // 8位计数器
+  32   1          {
+  33   2              DS1302_SCK_Clr(); // 时钟线拉低
+  34   2              Delay_us(1);      // 延时等待
+  35   2              dat >>= 1;        // 数据右移一位
+  36   2              if (SIO) {
+  37   3                  dat |= 0x80; // 读取数据
+  38   3              }
+  39   2              DS1302_SCK_Set(); // 时钟线拉高
+  40   2              Delay_us(1);      // 延时等待
+  41   2          }
+  42   1          return dat;
+  43   1      }
+  44          /***********************************************
+  45          函数名称：DS1302_WriteByte
+  46          功    能：向DS1302写一个字节数据
+  47          入口参数：dat：写入的数据
+  48          返 回 值：无
+  49          备    注：无
+  50          ************************************************/
+  51          void DS1302_WriteByte(unsigned char dat)
+  52          {
+  53   1          unsigned char i;
+  54   1          unsigned char temp;
+C51 COMPILER V9.59.0.0   DS1302                                                            04/18/2026 23:02:51 PAGE 2   
+
+  55   1          for (i = 0; i < 8; i++) // 8位计数器
+  56   1          {
+  57   2              temp = dat;
+  58   2              DS1302_SCK_Clr();          // 时钟线拉低
+  59   2              Delay_us(1);               // 延时等待
+  60   2              if ((temp & 0x01) == 0x01) // 先发送低字节
+  61   2              {
+  62   3                  DS1302_SIO_Set();
+  63   3              } else {
+  64   3                  DS1302_SIO_Clr();
+  65   3              }
+  66   2              DS1302_SCK_Set(); // 时钟线拉高
+  67   2              dat >>= 1;        // 移出数据
+  68   2              Delay_us(1);      // 延时等待
+  69   2          }
+  70   1      }
+  71          /***********************************************
+  72          函数名称：DS1302_ReadData
+  73          功    能：读DS1302某地址的的数据
+  74          入口参数：addr:地址。
+  75          返 回 值：读出的数据。
+  76          备    注：无
+  77          ************************************************/
+  78          unsigned char DS1302_ReadData(unsigned char addr)
+  79          {
+  80   1          unsigned char dat;
+  81   1      
+  82   1          DS1302_SCE_Clr(); // 片选线拉低
+  83   1          Delay_us(1);
+  84   1          DS1302_SCK_Clr(); // 时钟线拉低
+  85   1          Delay_us(1);
+  86   1          DS1302_SCE_Set(); // 片选线拉高
+  87   1          Delay_us(1);
+  88   1          DS1302_WriteByte(addr);  // 写地址
+  89   1          dat = DS1302_ReadByte(); // 读数据
+  90   1          DS1302_SCK_Set();        // 时钟线拉高
+  91   1          DS1302_SCE_Clr();        // 片选线拉低
+  92   1      
+  93   1          return dat;
+  94   1      }
+  95          /***********************************************
+  96          函数名称：DS1302_WriteData
+  97          功    能：往DS1302的某个地址写入数据
+  98          入口参数：addr:地址。dat：写入的数据。
+  99          返 回 值：无
+ 100          备    注：无
+ 101          ************************************************/
+ 102          void DS1302_WriteData(unsigned char addr, unsigned char dat)
+ 103          {
+ 104   1          DS1302_SCE_Clr(); // 片选线拉低
+ 105   1          Delay_us(1);
+ 106   1          DS1302_SCK_Clr(); // 时钟线拉低
+ 107   1          Delay_us(1);
+ 108   1          DS1302_SCE_Set(); // 时钟线拉高
+ 109   1          Delay_us(1);
+ 110   1          DS1302_WriteByte(addr); // 写地址
+ 111   1          DS1302_WriteByte(dat);  // 写数据
+ 112   1          DS1302_SCK_Set();       // 时钟线拉高
+ 113   1          DS1302_SCE_Clr();       // 片选线拉低
+ 114   1      }
+ 115          /***********************************************
+ 116          函数名称：DS1302_WriteRAM
+C51 COMPILER V9.59.0.0   DS1302                                                            04/18/2026 23:02:51 PAGE 3   
+
+ 117          功    能：向DS1302的RAM中写入数据函数
+ 118          入口参数：pBuf：指向设置值数据的指针
+ 119          返 回 值：无
+ 120          备    注：详见数据手册时间格式。
+ 121          ************************************************/
+ 122          void DS1302_WriteRAM(unsigned char *pBuf)
+ 123          {
+ 124   1          unsigned char addr = 0xc0; // 写ram开始地址
+ 125   1          unsigned char n    = 7;    // 使用7个字节的ram
+ 126   1      
+ 127   1          DS1302_WriteData(0x8e, 0x00); // 允许写操作
+ 128   1          while (n--)                   // 连续写7个RAM寄存器，地址增2.
+ 129   1          {
+ 130   2              DS1302_WriteData(addr, *pBuf++);
+ 131   2              addr += 2; // 按数据手册定义，地址以2递增
+ 132   2          }
+ 133   1          DS1302_WriteData(0x8e, 0x80); // 写保护
+ 134   1      }
+ 135          /***********************************************
+ 136          函数名称：DS1302_ReadRAM
+ 137          功    能：从DS1302的RAM中读出数据函数
+ 138          入口参数：pBuf：指向保存时间数据的指针
+ 139          返 回 值：无
+ 140          备    注：无
+ 141          ************************************************/
+ 142          void DS1302_ReadRAM(unsigned char *pBuf)
+ 143          {
+ 144   1          unsigned char addr = 0xc1; // 读ram开始地址
+ 145   1          unsigned char n    = 7;    // 使用7个字节的ram
+ 146   1      
+ 147   1          while (n--) // 连续读7个RAM寄存器，地址增2.
+ 148   1          {
+ 149   2              *pBuf++ = DS1302_ReadData(addr);
+ 150   2              addr += 2;
+ 151   2          }
+ 152   1      }
+ 153          /***********************************************
+ 154          函数名称：DS1302_GetTime
+ 155          功    能：DS1302读取时钟函数
+ 156          入口参数：pClock：指向时间对象的指针
+ 157          返 回 值：无
+ 158          备    注：读取到的时钟数据格式为BCD格式。
+ 159          ************************************************/
+ 160          void DS1302_GetTime(DAYTIME *pClock)
+ 161          {
+ 162   1          // 开始读取的地址
+ 163   1          unsigned char addr = 0x81;
+ 164   1          // 读取秒数
+ 165   1          pClock->Second = DS1302_ReadData(addr);
+ 166   1          addr += 2;
+ 167   1          // 读取分钟
+ 168   1          pClock->Minute = DS1302_ReadData(addr);
+ 169   1          addr += 2;
+ 170   1          // 读取小时
+ 171   1          pClock->Hour = DS1302_ReadData(addr);
+ 172   1          addr += 2;
+ 173   1          // 读取日
+ 174   1          pClock->Day = DS1302_ReadData(addr);
+ 175   1          addr += 2;
+ 176   1          // 读取月
+ 177   1          pClock->Month = DS1302_ReadData(addr);
+ 178   1          addr += 2;
+C51 COMPILER V9.59.0.0   DS1302                                                            04/18/2026 23:02:51 PAGE 4   
+
+ 179   1          // 读取星期
+ 180   1          pClock->Week = DS1302_ReadData(addr);
+ 181   1          addr += 2;
+ 182   1          // 读取年
+ 183   1          pClock->Year = DS1302_ReadData(addr);
+ 184   1          addr += 2;
+ 185   1      }
+ 186          /***********************************************
+ 187          函数名称：DS1302_SetTime
+ 188          功    能：DS1302时间设置函数
+ 189          入口参数：pClock：指向时间对象的指针
+ 190          返 回 值：无
+ 191          备    注：详见数据手册时间格式。
+ 192          ************************************************/
+ 193          void DS1302_SetTime(DAYTIME *pClock)
+ 194          {
+ 195   1          // 开始写入的地址
+ 196   1          unsigned char addr = 0x80;
+ 197   1      
+ 198   1          DS1302_WriteData(0x8e, 0x00); // 允许写操作
+ 199   1      
+ 200   1          // 写入秒数
+ 201   1          DS1302_WriteData(addr, pClock->Second);
+ 202   1          addr += 2;
+ 203   1          // 写入分钟
+ 204   1          DS1302_WriteData(addr, pClock->Minute);
+ 205   1          addr += 2;
+ 206   1          // 写入时
+ 207   1          DS1302_WriteData(addr, pClock->Hour);
+ 208   1          addr += 2;
+ 209   1          // 写入日
+ 210   1          DS1302_WriteData(addr, pClock->Day);
+ 211   1          addr += 2;
+ 212   1          // 写入月
+ 213   1          DS1302_WriteData(addr, pClock->Month);
+ 214   1          addr += 2;
+ 215   1          // 写入星期
+ 216   1          DS1302_WriteData(addr, pClock->Week);
+ 217   1          addr += 2;
+ 218   1          // 写入年
+ 219   1          DS1302_WriteData(addr, pClock->Year);
+ 220   1          addr += 2;
+ 221   1      
+ 222   1          DS1302_WriteData(0x8e, 0x80); // 写保护
+ 223   1      }
+ 224          /***********************************************
+ 225          函数名称：DS1302_Init
+ 226          功    能：DS1302初始化函数
+ 227          入口参数：无
+ 228          返 回 值：无
+ 229          备    注：
+ 230                    DS1302具体命令详见数据手册
+ 231          ************************************************/
+ 232          void DS1302_Init(DAYTIME *pClock)
+ 233          {
+ 234   1          unsigned char cnt;
+ 235   1          // 保存RAM数据
+ 236   1          unsigned char RAMData[7];
+ 237   1      
+ 238   1          // 将P21 P22设置为准双向口
+ 239   1          P2M1 &= ~((1 << 1) | (1 << 2));
+ 240   1          P2M0 &= ~((1 << 1) | (1 << 2));
+C51 COMPILER V9.59.0.0   DS1302                                                            04/18/2026 23:02:51 PAGE 5   
+
+ 241   1      
+ 242   1          // 初始化P44口为准双向口
+ 243   1          P4M1 &= ~(1 << 4);
+ 244   1          P4M0 &= ~(1 << 4);
+ 245   1      
+ 246   1          DS1302_SCE_Clr();
+ 247   1          DS1302_SCK_Clr();
+ 248   1      
+ 249   1          DS1302_WriteData(0x8e, 0x00); // 允许写操作
+ 250   1          // 读取振荡器工作状态
+ 251   1          if ((DS1302_ReadData(0x81) & 0x80) == 0x80) {
+ 252   2              // 如果振荡器停止，则启动
+ 253   2              DS1302_WriteData(0x80, 0x00); // 时钟启动
+ 254   2          }
+ 255   1          DS1302_WriteData(0x90, 0xa6); // 一个二极管＋4K电阻充电
+ 256   1          DS1302_WriteData(0x8e, 0x80); // 写保护
+ 257   1      
+ 258   1          Delay_us(1000);
+ 259   1          DS1302_ReadRAM(RAMData); // 读取内部RAM数据
+ 260   1      
+ 261   1          for (cnt = 0; cnt < 7; cnt++) {
+ 262   2              if (RAMData[cnt] != Init[cnt]) // 如果不同，则认为未初始化
+ 263   2              {
+ 264   3                  // 初始化时钟
+ 265   3                  pClock->Second = Init[0];
+ 266   3                  pClock->Minute = Init[1];
+ 267   3                  pClock->Hour   = Init[2];
+ 268   3                  pClock->Day    = Init[3];
+ 269   3                  pClock->Month  = Init[4];
+ 270   3                  pClock->Week   = Init[5];
+ 271   3                  pClock->Year   = Init[6];
+ 272   3      
+ 273   3                  DS1302_SetTime(pClock); // 重新初始化
+ 274   3                  DS1302_WriteRAM(Init);
+ 275   3              }
+ 276   2          }
+ 277   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    721    ----
+   CONSTANT SIZE    =      7    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      29
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

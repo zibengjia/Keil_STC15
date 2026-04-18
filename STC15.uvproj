@@ -391,6 +391,51 @@
               <FileType>5</FileType>
               <FilePath>.\SoundPlay.h</FilePath>
             </File>
+            <File>
+              <FileName>DS1302.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\DS1302.c</FilePath>
+            </File>
+            <File>
+              <FileName>DS1302.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\DS1302.h</FilePath>
+            </File>
+            <File>
+              <FileName>hc595.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\hc595.c</FilePath>
+            </File>
+            <File>
+              <FileName>hc595.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\hc595.h</FilePath>
+            </File>
+            <File>
+              <FileName>key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\key.c</FilePath>
+            </File>
+            <File>
+              <FileName>key.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\key.h</FilePath>
+            </File>
+            <File>
+              <FileName>lcd1602.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\lcd1602.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd1602.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\lcd1602.h</FilePath>
+            </File>
+            <File>
+              <FileName>main.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\main.h</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

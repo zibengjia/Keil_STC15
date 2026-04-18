@@ -30,7 +30,8 @@
             "editor.autoIndent": "advanced"
         },
         "cSpell.words": [
-            "Chun"
+            "Chun",
+            "Delayms"
         ],
         "Codegeex.RepoIndex": true
     },

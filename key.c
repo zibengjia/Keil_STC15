@@ -32,9 +32,9 @@ void IO_Init(void)
 unsigned char Key_Scan(void)
 {
     unsigned char KeyTemp1, KeyTemp2;
-    unsigned char KeyValue;
+    unsigned char KeyValue = 0;
     static unsigned char KeyCount = 0;
-    unsigned char shortKey = 0, longKey = 0;
+    unsigned char longKey = 0;
     // 以下为S12，S13，S14独立按键扫描
     // 读入的端口先置高,准双向口做输入必须先置高
     // 1<<K12相当于1<<4 = (0001 0000) 即K12所在的P34口置高
@@ -47,43 +47,38 @@ unsigned char Key_Scan(void)
         KeyTemp1 = KEYPORT | (~((1 << K12) | (1 << K13) | (1 << K14))); // 再次读取
 
         if (KeyTemp1 != 0xff) {
-            while (KeyTemp1 != 0xff) // 等待按键释放
+            KeyTemp2   = KeyTemp1;
+            KeyCount   = 0;
+            longKey    = 0;
+            while (KeyTemp1 != 0xff) // 等待按键释放并判断长按
             {
-                KeyTemp2 = KeyTemp1;
-                // 重新读取
+                Delay_ms(10);
                 KeyTemp1 = KEYPORT | (~((1 << K12) | (1 << K13) | (1 << K14)));
-                if (KeyTemp1 != 0xff) {
-                    shortKey = 1;
-                    while (KeyTemp1 != 0xff) {
-                        Delay_ms(10);
-                        if (KeyCount++ > 49) {
-                            longKey  = 1;
-                            KeyCount = 0;
-                        }
-                    }
+                if (KeyCount++ > 50) {
+                    longKey = 1;
                 }
             }
             switch (KeyTemp2) {
                 case ~(1 << K12): // S12按下
                 {
-                    if (shortKey == 1)
+                    if (longKey == 0)
                         KeyValue = KEY12;
-                    else if (longKey == 1)
+                    else
                         KeyValue = KEY12L;
 
                 } break;
                 case ~(1 << K13): // S13按下
                 {
-                    if (shortKey == 1)
+                    if (longKey == 0)
                         KeyValue = KEY13;
-                    else if (longKey == 1)
+                    else
                         KeyValue = KEY13L;
                 } break;
                 case ~(1 << K14): // S14按下
                 {
-                    if (shortKey == 1)
+                    if (longKey == 0)
                         KeyValue = KEY14;
-                    else if (longKey == 1)
+                    else
                         KeyValue = KEY14L;
                 } break;
             }

@@ -33,6 +33,7 @@
 #include <STC15F2K60S2.H>
 typedef struct {
     unsigned char *Sound;
+    unsigned char *musicName;
     unsigned char Signature;
     unsigned Octachord;
     unsigned int Speed;

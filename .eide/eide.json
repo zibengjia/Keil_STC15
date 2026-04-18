@@ -24,6 +24,30 @@
           },
           {
             "path": "key.h"
+          },
+          {
+            "path": "DS1302.c"
+          },
+          {
+            "path": "DS1302.h"
+          },
+          {
+            "path": "hc595.c"
+          },
+          {
+            "path": "hc595.h"
+          },
+          {
+            "path": "lcd1602.c"
+          },
+          {
+            "path": "lcd1602.h"
+          },
+          {
+            "path": "menu.c"
+          },
+          {
+            "path": "menu.h"
           }
         ],
         "folders": []

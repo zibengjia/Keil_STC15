@@ -1,4 +1,8 @@
 ".\Objects\main.obj",
-".\Objects\SoundPlay.obj" 
+".\Objects\SoundPlay.obj",
+".\Objects\DS1302.obj",
+".\Objects\hc595.obj",
+".\Objects\key.obj",
+".\Objects\lcd1602.obj" 
 TO ".\Objects\STC15" 
 PRINT(".\Listings\STC15.m51") RAMSIZE(256) 
