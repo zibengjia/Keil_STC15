@@ -7,13 +7,6 @@
 |演奏速度(1-12000):	值越大速度越快;
 */
 
-Music code Music1 = {Music_Chun, "Haruhikage", 6, 2, 54};
-Music code Music2 = {Music_Girl, "Keep Walking", 6, 2, 54};
-Music code Music3 = {Music_GGB, "GGB", 6, 2, 54};
-Music code Music4 = {Music_Two, "Two Butterflies", 6, 2, 54};
-Music code Music5 = {Music_Cao, "Orchid Grass", 6, 2, 54};
-Music code Music6 = {Music_ZuiXuan, "The Coolest Ethnic Trend", 6, 2, 54};
-
 void main()
 {
     mode = ClockMode; // 初始模式为时钟模式
@@ -22,14 +15,15 @@ void main()
     InitialSound();
     Timer2_Init();
     LCD1602_Init();
+
     while (1) {
         Key_Process();
-    if (UpdateTimeFlag == 1 && mode == ClockMode) { // 只有在时钟模式下才更新时间
-        // 定时读取时钟
-        DS1302_GetTime(&Clock);        // 读取时钟
-        LCD1602_Display_Clock(&Clock); // 显示时钟
-        UpdateTimeFlag = 0;
-    }
+        if (UpdateTimeFlag == 1 && mode == ClockMode) { // 只有在时钟模式下才更新时间
+            // 定时读取时钟
+            DS1302_GetTime(&Clock);        // 读取时钟
+            LCD1602_Display_Clock(&Clock); // 显示时钟
+            UpdateTimeFlag = 0;
+        }
     }
 }
 void timer2_isr(void) interrupt 12
@@ -53,6 +47,7 @@ void Delay1ms(unsigned int count)
 void Key_Process(void)
 {
     unsigned char KeyNum;
+
     if ((KeyNum = Key_Scan()) != 0) // 检测是否有键按下
     {
         if (mode != setting) {
@@ -75,7 +70,31 @@ void Key_Process(void)
                     mode = KeyBoard;
                     break;
                 case MusicPlay:
-                    mode = MusicPlay;
+                    switch (KeyNum) {
+                        case KEY12:
+                            // 上一首
+                            if (MusicIndex > 0) {
+                                MusicIndex--;
+                            } else {
+                                MusicIndex = musicNum - 1; // 循环到最后一首
+                            }
+                            LCD1602_Display_Str(LINE2, MusicName[MusicIndex]); // 显示当前歌曲名称
+                            break;
+                        case KEY13:
+                            // 下一首
+                            if (MusicIndex < musicNum - 1) {
+                                MusicIndex++;
+                            } else {
+                                MusicIndex = 0; // 循环到第一首
+                            }
+                            LCD1602_Display_Str(LINE2, MusicName[MusicIndex]); // 显示当前歌曲名称
+                            break;
+                        case KEY12L:
+                            MusicPlayingFlag = 1; // 进入播放(播放中再次按KEY12L会在Play内部暂停)
+                            Play(MusicData[MusicIndex], 0, 2, 54, 1);
+                            MusicPlayingFlag = 0;
+                            break;
+                    }
                     break;
                 case AlarmSet:
                     mode = AlarmSet;
@@ -116,8 +135,8 @@ void Key_Process(void)
                             LCD1602_Display_Str(LINE2, "KeyBoard Mode");
                             break;
                         case MusicPlay:
-                            LCD1602_Display_Str(LINE2, "MusicPlay Mode");
-                            Play(Music1); // 播放乐曲1
+                            LCD1602_Display_Str(LINE1, "Music:");
+                            LCD1602_Display_Str(LINE2, MusicName[MusicIndex]); // 显示当前歌曲名称
                             break;
                         case ClockSet:
                             LCD1602_Display_Str(LINE2, "ClockSet Mode");

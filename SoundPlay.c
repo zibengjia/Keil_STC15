@@ -1,4 +1,5 @@
-#include "STC15F2K60S2.H"
+#include "SoundPlay.h"
+#include "key.h"
 
 //**************************************************************************
 
@@ -6,7 +7,7 @@
 #define SOUND_SPACE 4 / 5      // 定义普通音符演奏的长度分率
 sbit BeepIO = P1 ^ 6;          // 定义输出管脚
 typedef struct {
-    unsigned char *Sound;
+    unsigned char code *Sound;
     unsigned char Signature;
     unsigned Octachord;
     unsigned int Speed;
@@ -14,9 +15,21 @@ typedef struct {
 unsigned int code FreTab[12]    = {262, 277, 294, 311, 330, 349, 369, 392, 415, 440, 466, 494}; // 原始频率表
 unsigned char code SignTab[7]   = {0, 2, 4, 5, 7, 9, 11};                                       // 1~7在频率表中的位置
 unsigned char code LengthTab[7] = {1, 2, 4, 8, 16, 32, 64};
-unsigned int PlayTimeTotal;
-unsigned char Sound_Temp_TH0, Sound_Temp_TL0; // 音符定时器初值暂存
-unsigned char Sound_Temp_TH1, Sound_Temp_TL1; // 音长定时器初值暂存
+unsigned int idata PlayTimeTotal;
+unsigned char idata Sound_Temp_TH0, Sound_Temp_TL0; // 音符定时器初值暂存
+unsigned char idata Sound_Temp_TH1, Sound_Temp_TL1; // 音长定时器初值暂存
+static unsigned int idata ResumePoint = 0;
+static unsigned char code *LastSound  = 0;
+
+static bit PauseRequested(void)
+{
+    if (Key_Scan() == KEY12L) {
+        while (Key_Scan() != 0) {
+        }
+        return 1;
+    }
+    return 0;
+}
 
 //**************************************************************************
 void InitialSound(void)
@@ -60,31 +73,19 @@ unsigned int getPlayTime(void)
     return PlayTimeTotal;
 }
 
-void Play(Music music)
+void Play(unsigned char code *Sound, unsigned char Signature, unsigned Octachord, unsigned int Speed, bit musicPlayFlag)
 {
-    unsigned char Signature = music.Signature;
-    unsigned char Octachord = music.Octachord;
-    unsigned char Speed     = music.Speed;
-    unsigned char *Sound    = music.Sound;
-    unsigned int NewFreTab[12]; // 新的频率表
-    unsigned char i, j;
+    unsigned char i;
     unsigned int Point, LDiv, LDiv0, LDiv1, LDiv2, LDiv4, CurrentFre, Temp_T, SoundLength;
     unsigned char Tone, Length, SL, SH, SM, SLen, XG, FD;
-    unsigned char PlayTimeTotal = 0, PlayTimes = 0;
+    unsigned char PlayTimes = 0;
+    unsigned char NoteIndex;
 
-    for (i = 0; i < 12; i++) // 根据调号及升降八度来生成新的频率表
-    {
-        j = i + Signature;
-        if (j > 11) {
-            j            = j - 12;
-            NewFreTab[i] = FreTab[j] * 2;
-        } else
-            NewFreTab[i] = FreTab[j];
-
-        if (Octachord == 1)
-            NewFreTab[i] >>= 2; // 降八度 (除以4)
-        else if (Octachord == 3)
-            NewFreTab[i] <<= 2; // 升八度 (乘以4)
+    if (musicPlayFlag == 0) {
+        TR0    = 0;
+        TR1    = 0;
+        BeepIO = 1;
+        return;
     }
 
     SoundLength = 0;
@@ -93,7 +94,15 @@ void Play(Music music)
         SoundLength += 2;
     }
 
-    Point  = 0;
+    if (Sound != LastSound) {
+        LastSound  = Sound;
+        ResumePoint = 0;
+    }
+    if (ResumePoint >= SoundLength) {
+        ResumePoint = 0;
+    }
+
+    Point  = ResumePoint;
     Tone   = Sound[Point];
     Length = Sound[Point + 1]; // 读出第一个音符和它时时值
 
@@ -105,13 +114,29 @@ void Play(Music music)
     TR1 = 1;
 
     while (Point < SoundLength) {
+        if (PauseRequested()) {
+            ResumePoint = Point;
+            TR0         = 0;
+            TR1         = 0;
+            BeepIO      = 1;
+            return;
+        }
         SL = Tone % 10;      // 计算出音符
         SM = Tone / 10 % 10; // 计算出高低音
         SH = Tone / 100;     // 计算出是否升半
         if (SL != 0) {
-            CurrentFre = NewFreTab[SignTab[SL - 1] + SH]; // 查出对应音符的频率
-            if (SM == 1) CurrentFre >>= 2;                // 低音
-            if (SM == 3) CurrentFre <<= 2;                // 高音
+            NoteIndex = SignTab[SL - 1] + SH;
+            if (NoteIndex + Signature > 11) {
+                CurrentFre = FreTab[NoteIndex + Signature - 12] * 2;
+            } else {
+                CurrentFre = FreTab[NoteIndex + Signature];
+            }
+            if (Octachord == 1)
+                CurrentFre >>= 2; // 降八度
+            else if (Octachord == 3)
+                CurrentFre <<= 2;          // 升八度
+            if (SM == 1) CurrentFre >>= 2; // 低音
+            if (SM == 3) CurrentFre <<= 2; // 高音
             Temp_T         = 65536UL - (SYSTEM_OSC / CurrentFre / 2);
             Sound_Temp_TH0 = Temp_T / 256;
             Sound_Temp_TL0 = Temp_T % 256;
@@ -146,6 +171,13 @@ void Play(Music music)
                 TL1 = Sound_Temp_TL1;
                 PlayTimes++;
                 TF1 = 0;
+                if (PauseRequested()) {
+                    ResumePoint = Point;
+                    TR0         = 0;
+                    TR1         = 0;
+                    BeepIO      = 1;
+                    return;
+                }
             }
         }
         if (LDiv2 != 0) {
@@ -158,6 +190,13 @@ void Play(Music music)
                 TL1 = Sound_Temp_TL1;
                 PlayTimes++;
                 TF1 = 0;
+                if (PauseRequested()) {
+                    ResumePoint = Point;
+                    TR0         = 0;
+                    TR1         = 0;
+                    BeepIO      = 1;
+                    return;
+                }
             }
         }
         Point += 2;
@@ -168,6 +207,8 @@ void Play(Music music)
             PlayTimeTotal++;
         }
     }
+    ResumePoint = 0;
     BeepIO = 1;
     TR0    = 0;
+    TR1    = 0;
 }
