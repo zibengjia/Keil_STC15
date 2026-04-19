@@ -39,5 +39,6 @@ void HC595_Clear(void);
 void LED_Display(void);
 void HC595_SendWord(unsigned char dat, unsigned char dig);
 void Timer2_Init(void);
-
+void ToDisplayBuf(unsigned int High_Dat, unsigned int Low_Dat); 
+extern unsigned char code DispCode[36]; // 数码管字形码表
 #endif

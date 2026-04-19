@@ -1,30 +1,35 @@
 #include "main.h"
 
+/*
+|乐曲名           : 要播放的乐曲指针,结尾以(0,0)结束;
+|调号(0-11)       :	是指乐曲升多少个半音演奏;
+|升降八度(1-3)	  : 1:降八度, 2:不升不降, 3:升八度;
+|演奏速度(1-12000):	值越大速度越快;
+*/
+
+Music code Music1 = {Music_Chun, "Haruhikage", 6, 2, 54};
+Music code Music2 = {Music_Girl, "Keep Walking", 6, 2, 54};
+Music code Music3 = {Music_GGB, "GGB", 6, 2, 54};
+Music code Music4 = {Music_Two, "Two Butterflies", 6, 2, 54};
+Music code Music5 = {Music_Cao, "Orchid Grass", 6, 2, 54};
+Music code Music6 = {Music_ZuiXuan, "The Coolest Ethnic Trend", 6, 2, 54};
+
 void main()
 {
-    mode       = setting;
-    DispBuf[0] = 0x3F;
-    DispBuf[1] = 0x06;
-    DispBuf[2] = 0x5B;
-    DispBuf[3] = 0x4F;
-    DispBuf[4] = 0x66;
-    DispBuf[5] = 0x6D;
-    DispBuf[6] = 0x7D;
-    DispBuf[7] = 0x07;
-
+    mode = ClockMode; // 初始模式为时钟模式
     IO_Init();
-    LCD1602_Init();
-    HC595_Init();
     DS1302_Init(&Clock);
     InitialSound();
+    Timer2_Init();
+    LCD1602_Init();
     while (1) {
         Key_Process();
-        if ((UpdateTimeFlag == 1)) {
-            UpdateTimeFlag = 0;
-            // DS1302_GetTime(&Clock);   // 读取时钟
-            HC595_SendWord(0x3f, 0x00);
-            // ToTimeDisplayBuf(&Clock); // 显示时钟
-        }
+    if (UpdateTimeFlag == 1 && mode == ClockMode) { // 只有在时钟模式下才更新时间
+        // 定时读取时钟
+        DS1302_GetTime(&Clock);        // 读取时钟
+        LCD1602_Display_Clock(&Clock); // 显示时钟
+        UpdateTimeFlag = 0;
+    }
     }
 }
 void timer2_isr(void) interrupt 12
@@ -32,14 +37,12 @@ void timer2_isr(void) interrupt 12
     static unsigned int T0_Cnt = 0; // 静态计数器
     // 10ms
 
-    // 定时读取时钟
     T0_Cnt++;
-    if (T0_Cnt == 100) // 定时1000ms
+    if (T0_Cnt == 99) // 定时1000ms
     {
+        UpdateTimeFlag = 1;
         T0_Cnt         = 0;
-        UpdateTimeFlag = 1; // 更新标记有效
     }
-    IE2 &= 0xFB;
 }
 void Delay1ms(unsigned int count)
 {
@@ -52,62 +55,107 @@ void Key_Process(void)
     unsigned char KeyNum;
     if ((KeyNum = Key_Scan()) != 0) // 检测是否有键按下
     {
-        switch (mode) {
-            case KeyBoard:
-                mode = KeyBoard;
-                break;
-            case MusicPlay:
-                mode = MusicPlay;
-                break;
-            case AlarmSet:
-                mode = AlarmSet;
-                break;
-            case ClockSet:
-                mode = ClockSet;
-                break;
-            case setting:
+        if (mode != setting) {
+            if (KeyNum == KEY13L) {
+                // 返回菜单
                 mode = setting;
-                switch (KeyNum) {
-                    case KEY12:
-                        // 上翻
-                        if (menuIndex > 0) {
-                            menuIndex--;
-                        } else {
-                            menuIndex = menuNum - 1; // 循环到最后一个菜单项
-                        }
+                LCD1602_Display_Str(LINE1, "Main Menu");
+                LCD1602_Display_Str(LINE2, menuItems[menuIndex]); // 显示当前菜单项
+            }
+            switch (mode) {
+                case ClockMode:
+                    if (KeyNum == KEY12L) {
+                        // 进入设置模式
+                        mode = setting;
+                        LCD1602_Display_Str(LINE1, "Main Menu");
                         LCD1602_Display_Str(LINE2, menuItems[menuIndex]); // 显示当前菜单项
-                        break;
-                    case KEY13:
-                        // 下翻
-                        if (menuIndex < menuNum - 1) {
-                            menuIndex++;
-                        } else {
-                            menuIndex = 0; // 循环到第一个菜单项
-                        }
-                        LCD1602_Display_Str(LINE2, menuItems[menuIndex]); // 显示当前菜单项
-                        break;
-                    case KEY12L:
-                        // 确认
-                        mode = menuIndex;
-                        break;
-                }
-                break;
+                    }
+                    break;
+                case KeyBoard:
+                    mode = KeyBoard;
+                    break;
+                case MusicPlay:
+                    mode = MusicPlay;
+                    break;
+                case AlarmSet:
+                    mode = AlarmSet;
+                    break;
+                case ClockSet:
+                    mode = ClockSet;
+                    break;
+            }
+        } else {
+            switch (KeyNum) {
+                case KEY12:
+                    // 上翻
+                    if (menuIndex > 0) {
+                        menuIndex--;
+                    } else {
+                        menuIndex = menuNum - 1; // 循环到最后一个菜单项
+                    }
+                    LCD1602_Display_Str(LINE2, menuItems[menuIndex]); // 显示当前菜单项
+                    break;
+                case KEY13:
+                    // 下翻
+                    if (menuIndex < menuNum - 1) {
+                        menuIndex++;
+                    } else {
+                        menuIndex = 0; // 循环到第一个菜单项
+                    }
+                    LCD1602_Display_Str(LINE2, menuItems[menuIndex]); // 显示当前菜单项
+                    break;
+                case KEY13L:
+                    // 返回初始界面
+                    mode = ClockMode;
+                    break;
+                case KEY12L:
+                    // 确认
+                    mode = menuIndex;
+                    switch (mode) {
+                        case KeyBoard:
+                            LCD1602_Display_Str(LINE2, "KeyBoard Mode");
+                            break;
+                        case MusicPlay:
+                            LCD1602_Display_Str(LINE2, "MusicPlay Mode");
+                            Play(Music1); // 播放乐曲1
+                            break;
+                        case ClockSet:
+                            LCD1602_Display_Str(LINE2, "ClockSet Mode");
+                            break;
+                        case AlarmSet:
+                            LCD1602_Display_Str(LINE2, "AlarmSet Mode");
+                            break;
+                    }
+                    break;
+            }
         }
     }
 }
-void ToTimeDisplayBuf(DAYTIME *pClock)
+void LCD1602_Display_Clock(DAYTIME *pClock)
 {
-    DispBuf[7] = (pClock->Second) & 0x0f; // 秒低位
-    DispBuf[6] = (pClock->Second) >> 4;   // 秒高位
+    // 先BCD码转换为十进制
+    unsigned char DateStr[9];
+    unsigned char TimeStr[9];                        // 存储日期字符串，格式为 "YY/MM/DD"
+    DateStr[0] = ((pClock->Year >> 4) & 0x0F) + '0'; // 年十位
+    DateStr[1] = (pClock->Year & 0x0F) + '0';        // 年个位
+    DateStr[2] = '/';
+    DateStr[3] = ((pClock->Month >> 4) & 0x0F) + '0'; // 月十位
+    DateStr[4] = (pClock->Month & 0x0F) + '0';        // 月个位
+    DateStr[5] = '/';
+    DateStr[6] = ((pClock->Day >> 4) & 0 + 0x0F) + '0'; // 日十位
+    DateStr[7] = (pClock->Day & 0x0F) + '0';            // 日个位
+    DateStr[8] = '\0';                                  // 字符串结束标志
 
-    DispBuf[5] = 32; //-
+    TimeStr[0] = ((pClock->Hour >> 4) & 0x0F) + '0'; // 时十位
+    TimeStr[1] = (pClock->Hour & 0x0F) + '0';        // 时个位
+    TimeStr[2] = ':';
+    TimeStr[3] = ((pClock->Minute >> 4) & 0x0F) + '0'; // 分十位
+    TimeStr[4] = (pClock->Minute & 0x0F) + '0';        // 分个位
+    TimeStr[5] = ':';
+    TimeStr[6] = ((pClock->Second >> 4) & 0x0F) + '0'; // 秒十位
+    TimeStr[7] = (pClock->Second & 0x0F) + '0';        // 秒个位
+    TimeStr[8] = '\0';                                 // 字符串结束标志
 
-    DispBuf[4] = (pClock->Minute) & 0x0f;
-    ;                                          // 分钟低位
-    DispBuf[3] = (pClock->Minute & 0xf0) >> 4; // 分钟高位
-
-    DispBuf[2] = 32; //-
-
-    DispBuf[1] = (pClock->Hour) & 0x0f;      // 小时低位
-    DispBuf[0] = (pClock->Hour & 0xf0) >> 4; // 小时高位
+    LCD1602_Display_Str(LINE1 + 3, TimeStr); // 显示日期
+    LCD1602_Display_Str(LINE2 + 3, DateStr); // 显示时间
 }

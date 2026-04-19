@@ -2,7 +2,7 @@
 
 // 共阴数码管段码表
 unsigned char code DispCode[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F,
-                                 //      0    1    2    3    4    5   6    7    8    9
+                                  //      0    1    2    3    4    5   6    7    8    9
                                  0x77, 0x7C, 0x39, 0x5E, 0x79, 0x71, 0x3D, 0x76, 0x74, 0x30,
                                  //      A	   b    C	   d	  E	   F   G	  H	   h	  I
                                  0x10, 0x1E, 0x38, 0x54, 0x5C, 0x73, 0x67, 0x50, 0x31, 0x78,
@@ -13,13 +13,7 @@ unsigned char code DispCode[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07,
 unsigned char idata DispBuf[8];
 
 
-/***********************************************
-函数名称：HC595_Delayms
-功    能：STC 1T单片机1ms延时程序
-入口参数：ms:延时的毫秒数
-返 回 值：无
-备    注：示波器实测1.05ms 时钟11.0592MHz
-************************************************/
+
 void HC595_Delayms(unsigned int ms)
 {
     unsigned int i;
@@ -181,9 +175,74 @@ void HC595_Init(void)
     Timer2_Init();
 }
 /***********************************************
-函数名称：ToTimeDisplayBuf
-功    能：把时间数据放入显示缓冲区
-入口参数：pClock：指向保存时间对象的指针
+函数名称：ToDisplayBuf
+功    能：把待显示的数据放入显示缓冲区
+入口参数：High_Dat：高四位数码管数据
+                    Low_Dat： 低四位数码管数据
 返 回 值：无
 备    注：无
 ************************************************/
+void ToDisplayBuf(unsigned int High_Dat, unsigned int Low_Dat)
+{
+    // High_Dat/10的意思是判断千位，百位，十位是否为0
+    // 例如High_Dat=1234, High_Dat/10=123
+    // 如果High_Dat/10==0必然千位，百位，十位都为0，这三位上的0不显示，称为消隐
+    // 个位不需要判断是否消隐，直接显示
+    if ((High_Dat / 10) == 0) {
+        // 35为DispCode[35]中定义的数码管熄灭的字形码
+        DispBuf[DIG1] = 35;            // High_Dat的千位
+        DispBuf[DIG2] = 35;            // High_Dat的百位
+        DispBuf[DIG3] = 35;            // High_Dat的十位
+        DispBuf[DIG4] = High_Dat % 10; // High_Dat的个位
+    }
+    // High_Dat/100的意思是判断千位，百位是否为0
+    else if ((High_Dat / 100) == 0) {
+        DispBuf[DIG1] = 35;                  // High_Dat的千位
+        DispBuf[DIG2] = 35;                  // High_Dat的百位
+        DispBuf[DIG3] = High_Dat % 100 / 10; // High_Dat的十位
+        DispBuf[DIG4] = High_Dat % 10;       // High_Dat的个位
+    }
+    // High_Dat/1000的意思是判断千位是否为0
+    else if ((High_Dat / 1000) == 0) {
+        DispBuf[DIG1] = 35;                    // High_Dat的千位
+        DispBuf[DIG2] = High_Dat % 1000 / 100; // High_Dat的百位
+        DispBuf[DIG3] = High_Dat % 100 / 10;   // High_Dat的十位
+        DispBuf[DIG4] = High_Dat % 10;         // High_Dat的个位
+    } else {
+        DispBuf[DIG1] = High_Dat % 10000 / 1000; // High_Dat的千位
+        DispBuf[DIG2] = High_Dat % 1000 / 100;   // High_Dat的百位
+        DispBuf[DIG3] = High_Dat % 100 / 10;     // High_Dat的十位
+        DispBuf[DIG4] = High_Dat % 10;           // High_Dat的个位
+    }
+
+    // Low_Dat/10的意思是判断千位，百位，十位是否为0
+    // 例如Low_Dat=1234, Low_Dat/10=123
+    // 如果Low_Dat/10==0必然千位，百位，十位都为0，这三位上的0不显示，称为消隐
+    // 个位不需要判断是否消隐，直接显示
+    if ((Low_Dat / 10) == 0) {
+        // 35为DispCode[35]中定义的数码管熄灭的字形码
+        DispBuf[DIG5] = 35;           // Low_Dat的千位
+        DispBuf[DIG6] = 35;           // Low_Dat的百位
+        DispBuf[DIG7] = 35;           // Low_Dat的十位
+        DispBuf[DIG8] = Low_Dat % 10; // Low_Dat的个位
+    }
+    // Low_Dat/100的意思是判断千位，百位是否为0
+    else if ((Low_Dat / 100) == 0) {
+        DispBuf[DIG5] = 35;                 // Low_Dat的千位
+        DispBuf[DIG6] = 35;                 // Low_Dat的百位
+        DispBuf[DIG7] = Low_Dat % 100 / 10; // Low_Dat的十位
+        DispBuf[DIG8] = Low_Dat % 10;       // Low_Dat的个位
+    }
+    // Low_Dat/1000的意思是判断千位是否为0
+    else if ((Low_Dat / 1000) == 0) {
+        DispBuf[DIG5] = 35;                   // Low_Dat的千位
+        DispBuf[DIG6] = Low_Dat % 1000 / 100; // Low_Dat的百位
+        DispBuf[DIG7] = Low_Dat % 100 / 10;   // Low_Dat的十位
+        DispBuf[DIG8] = Low_Dat % 10;         // Low_Dat的个位
+    } else {
+        DispBuf[DIG5] = Low_Dat % 10000 / 1000; // Low_Dat的千位
+        DispBuf[DIG6] = Low_Dat % 1000 / 100;   // Low_Dat的百位
+        DispBuf[DIG7] = Low_Dat % 100 / 10;     // Low_Dat的十位
+        DispBuf[DIG8] = Low_Dat % 10;           // Low_Dat的个位
+    }
+}
