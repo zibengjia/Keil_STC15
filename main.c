@@ -7,6 +7,15 @@
 |演奏速度(1-12000):	值越大速度越快;
 */
 
+/* 键盘模式单音(音高, 音长, 结束符) */
+unsigned char code KeyTone_Do[]  = {0x15, 0x03, 0x00, 0x00};
+unsigned char code KeyTone_Re[]  = {0x16, 0x03, 0x00, 0x00};
+unsigned char code KeyTone_Mi[]  = {0x17, 0x03, 0x00, 0x00};
+unsigned char code KeyTone_Fa[]  = {0x18, 0x03, 0x00, 0x00};
+unsigned char code KeyTone_Sol[] = {0x19, 0x03, 0x00, 0x00};
+unsigned char code KeyTone_La[]  = {0x1A, 0x03, 0x00, 0x00};
+unsigned char code KeyTone_Si[]  = {0x1B, 0x03, 0x00, 0x00};
+
 void main()
 {
     mode = ClockMode; // 初始模式为时钟模式
@@ -47,7 +56,8 @@ void Delay1ms(unsigned int count)
 void Key_Process(void)
 {
     unsigned char KeyNum;
-
+    static unsigned char speedKeyBoard = 30; // 键盘模式下的演奏速度
+    static signed char signatureKeyBoard = 2; // 键盘模式下的调号
     if ((KeyNum = Key_Scan()) != 0) // 检测是否有键按下
     {
         if (mode != setting) {
@@ -59,6 +69,7 @@ void Key_Process(void)
             }
             switch (mode) {
                 case ClockMode:
+                    // 时钟显示模式下按键处理
                     if (KeyNum == KEY12L) {
                         // 进入设置模式
                         mode = setting;
@@ -67,9 +78,47 @@ void Key_Process(void)
                     }
                     break;
                 case KeyBoard:
-                    mode = KeyBoard;
+                    // 键盘演奏模式下按键处理
+                    switch (KeyNum) {
+                        case KEY14:
+                            LCD1602_Display_Str(LINE2, "Do");
+                            Play(KeyTone_Do, 0, signatureKeyBoard, speedKeyBoard, 1);
+
+                            break;
+                        case KEY9:
+                            LCD1602_Display_Str(LINE2, "Re");
+                            Play(KeyTone_Re, 0, signatureKeyBoard, speedKeyBoard, 1);
+
+                            break;
+                        case KEY10:
+                            LCD1602_Display_Str(LINE2, "Mi");
+                            Play(KeyTone_Mi, 0, signatureKeyBoard, speedKeyBoard, 1);
+
+                            break;
+                        case KEY11:
+                            LCD1602_Display_Str(LINE2, "Fa");
+                            Play(KeyTone_Fa, 0, signatureKeyBoard, speedKeyBoard, 1);
+
+                            break;
+                        case KEY6:
+                            LCD1602_Display_Str(LINE2, "Sol");
+                            Play(KeyTone_Sol, 0, signatureKeyBoard, speedKeyBoard, 1);
+
+                            break;
+                        case KEY7:
+                            LCD1602_Display_Str(LINE2, "La");
+                            Play(KeyTone_La, 0, signatureKeyBoard, speedKeyBoard, 1);
+
+                            break;
+                        case KEY8:
+                            LCD1602_Display_Str(LINE2, "Si");
+                            Play(KeyTone_Si, 0, signatureKeyBoard, speedKeyBoard, 1);
+
+                            break;
+                    }
                     break;
                 case MusicPlay:
+                    // 音乐播放模式下按键处理
                     switch (KeyNum) {
                         case KEY12:
                             // 上一首

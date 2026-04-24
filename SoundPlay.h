@@ -35,6 +35,7 @@
 void InitialSound(void);
 void Play(unsigned char code *Sound, unsigned char Signature, unsigned Octachord, unsigned int Speed, bit musicPlayFlag);
 unsigned int getPlayTime(void);
+void resetPlayTime(void);
 
 unsigned char code Music_Girl[] = {0x17, 0x02, 0x17, 0x03, 0x18, 0x03, 0x19, 0x02, 0x15, 0x03,
                                    0x16, 0x03, 0x17, 0x03, 0x17, 0x03, 0x17, 0x03, 0x18, 0x03,

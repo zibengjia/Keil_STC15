@@ -1,5 +1,6 @@
 #include "SoundPlay.h"
 #include "key.h"
+#include "lcd1602.h"
 
 //**************************************************************************
 
@@ -20,6 +21,23 @@ unsigned char idata Sound_Temp_TH0, Sound_Temp_TL0; // 音符定时器初值暂�
 unsigned char idata Sound_Temp_TH1, Sound_Temp_TL1; // 音长定时器初值暂存
 static unsigned int idata ResumePoint = 0;
 static unsigned char code *LastSound  = 0;
+
+static void DisplayPlayTime(unsigned int seconds)
+{
+    unsigned char minutes;
+    unsigned char secs;
+    unsigned char TimeStr[] = "00:00";
+
+    minutes = (unsigned char)((seconds / 60) % 100);
+    secs    = (unsigned char)(seconds % 60);
+
+    TimeStr[0] = (minutes / 10) + '0';
+    TimeStr[1] = (minutes % 10) + '0';
+    TimeStr[3] = (secs / 10) + '0';
+    TimeStr[4] = (secs % 10) + '0';
+
+    LCD1602_Display_Str(LINE1+5, TimeStr);
+}
 
 static bit PauseRequested(void)
 {
@@ -73,6 +91,11 @@ unsigned int getPlayTime(void)
     return PlayTimeTotal;
 }
 
+void resetPlayTime(void)
+{
+    PlayTimeTotal = 0;
+}
+
 void Play(unsigned char code *Sound, unsigned char Signature, unsigned Octachord, unsigned int Speed, bit musicPlayFlag)
 {
     unsigned char i;
@@ -80,6 +103,7 @@ void Play(unsigned char code *Sound, unsigned char Signature, unsigned Octachord
     unsigned char Tone, Length, SL, SH, SM, SLen, XG, FD;
     unsigned char PlayTimes = 0;
     unsigned char NoteIndex;
+    bit UsePlayTimer;
 
     if (musicPlayFlag == 0) {
         TR0    = 0;
@@ -94,12 +118,20 @@ void Play(unsigned char code *Sound, unsigned char Signature, unsigned Octachord
         SoundLength += 2;
     }
 
+    UsePlayTimer = (SoundLength > 8);
+
     if (Sound != LastSound) {
-        LastSound  = Sound;
+        LastSound   = Sound;
         ResumePoint = 0;
     }
     if (ResumePoint >= SoundLength) {
         ResumePoint = 0;
+    }
+    if (ResumePoint == 0) {
+        PlayTimeTotal = 0;
+        if (UsePlayTimer) {
+            DisplayPlayTime(0);
+        }
     }
 
     Point  = ResumePoint;
@@ -205,10 +237,13 @@ void Play(unsigned char code *Sound, unsigned char Signature, unsigned Octachord
         if (PlayTimes >= 99) {
             PlayTimes = 0;
             PlayTimeTotal++;
+            if (UsePlayTimer) {
+                DisplayPlayTime(PlayTimeTotal);
+            }
         }
     }
     ResumePoint = 0;
-    BeepIO = 1;
-    TR0    = 0;
-    TR1    = 0;
+    BeepIO      = 1;
+    TR0         = 0;
+    TR1         = 0;
 }
