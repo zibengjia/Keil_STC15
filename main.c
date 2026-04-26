@@ -37,7 +37,8 @@ void main()
 }
 void timer2_isr(void) interrupt 12
 {
-    static unsigned int T0_Cnt = 0; // 静态计数器
+    static unsigned int T0_Cnt  = 0;
+    static unsigned char T1_Cnt = 0;
     // 10ms
 
     T0_Cnt++;
@@ -45,6 +46,15 @@ void timer2_isr(void) interrupt 12
     {
         UpdateTimeFlag = 1;
         T0_Cnt         = 0;
+    }
+    if (T1_Cnt++ > 49) // 定时500ms
+    {
+        T1_Cnt = 0;
+        if (mode == ClockSet) {
+            ToDateNonDispBuf(clockSetIndex + 1); // 消隐当前设置项
+        } else if (mode == ClockMode) {
+            ToDateOrgDispBuf(clockSetIndex + 1, &Clock); // 恢复显示当前设置项
+        }
     }
 }
 void Delay1ms(unsigned int count)
@@ -56,9 +66,9 @@ void Delay1ms(unsigned int count)
 void Key_Process(void)
 {
     unsigned char KeyNum;
-    static unsigned char speedKeyBoard = 30; // 键盘模式下的演奏速度
-    static signed char signatureKeyBoard = 2; // 键盘模式下的调号
-    if ((KeyNum = Key_Scan()) != 0) // 检测是否有键按下
+    static unsigned char speedKeyBoard   = 30; // 键盘模式下的演奏速度
+    static signed char signatureKeyBoard = 2;  // 键盘模式下的调号
+    if ((KeyNum = Key_Scan()) != 0)            // 检测是否有键按下
     {
         if (mode != setting) {
             if (KeyNum == KEY13L) {
@@ -149,7 +159,8 @@ void Key_Process(void)
                     mode = AlarmSet;
                     break;
                 case ClockSet:
-                    mode = ClockSet;
+                    // 时钟校准模式下按键处理
+
                     break;
             }
         } else {

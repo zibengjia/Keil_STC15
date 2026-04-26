@@ -1,5 +1,5 @@
 #include "lcd1602.h"
-// 包含该函数可以使用_nop_()函数
+
 #include <intrins.h>
 /***********************************************
 函数名称：LCD1602_Delay1us
@@ -231,5 +231,190 @@ void App_FormatDec(unsigned char *pstr, unsigned char value)
         pstr++;
         value %= mult;
         mult /= 10;
+    }
+}
+
+/***********************************************
+函数名称：HEX2ASCII
+功    能：4位十六进制数转ASCII字符
+入口参数：hex:0x00~0x0F
+返 回 值：对应ASCII字符
+备    注：无
+************************************************/
+static unsigned char HEX2ASCII(unsigned char hex)
+{
+    hex &= 0x0F;
+    if (hex < 10) {
+        return (unsigned char)('0' + hex);
+    }
+    return (unsigned char)('A' + (hex - 10));
+}
+
+/***********************************************
+函数名称：ToDateNonDispBuf
+功    能：时钟设置部分消隐
+入口参数：无
+返 回 值：无
+备    注：无
+************************************************/
+void ToDateNonDispBuf(unsigned char set)
+{
+    switch (set) {
+        case 1: // 年
+        {
+            LCD1602_CheckBusy(); // 显示地址
+            LCD1602_WriteCMD(LINE1 + 4);
+
+            LCD1602_CheckBusy(); // 显示空格
+            LCD1602_WriteDAT(' ');
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(' ');
+        } break;
+        case 2: // 月
+        {
+            LCD1602_CheckBusy(); // 显示地址
+            LCD1602_WriteCMD(LINE1 + 7);
+
+            LCD1602_CheckBusy(); // 显示空格
+            LCD1602_WriteDAT(' ');
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(' ');
+        } break;
+        case 3: // 日
+        {
+            LCD1602_CheckBusy(); // 显示地址
+            LCD1602_WriteCMD(LINE1 + 10);
+
+            LCD1602_CheckBusy(); // 显示空格
+            LCD1602_WriteDAT(' ');
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(' ');
+        } break;
+        case 4: // 星期
+        {
+            LCD1602_CheckBusy(); // 显示地址
+            LCD1602_WriteCMD(LINE1 + 14);
+
+            LCD1602_CheckBusy(); // 显示空格
+            LCD1602_WriteDAT(' ');
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(' ');
+        } break;
+        case 5: // 时
+        {
+            LCD1602_CheckBusy(); // 显示地址
+            LCD1602_WriteCMD(LINE2 + 4);
+
+            LCD1602_CheckBusy(); // 显示空格
+            LCD1602_WriteDAT(' ');
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(' ');
+        } break;
+        case 6: // 分
+        {
+            LCD1602_CheckBusy(); // 显示地址
+            LCD1602_WriteCMD(LINE2 + 7);
+
+            LCD1602_CheckBusy(); // 显示空格
+            LCD1602_WriteDAT(' ');
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(' ');
+        } break;
+
+        case 7: // 秒
+        {
+            LCD1602_CheckBusy(); // 显示地址
+            LCD1602_WriteCMD(LINE2 + 10);
+
+            LCD1602_CheckBusy(); // 显示空格
+            LCD1602_WriteDAT(' ');
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(' ');
+        } break;
+    }
+}
+
+
+/***********************************************
+函数名称：ToTimeOriDispBuf
+功    能：显示消隐前的时间值
+入口参数：无
+返 回 值：无
+备    注：无
+************************************************/
+
+void ToDateOrgDispBuf(unsigned char set, DAYTIME *pClock)
+{
+    switch (set) {
+        case 1: // 年
+        {
+            LCD1602_CheckBusy(); // 显示地址
+            LCD1602_WriteCMD(LINE1 + 4);
+
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII(((pClock->Year) & 0xf0) >> 4)); // 年高位
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII((pClock->Year) & 0x0f)); // 年低位
+        } break;
+
+        case 2: // 月
+        {
+            LCD1602_CheckBusy(); // 显示地址
+            LCD1602_WriteCMD(LINE1 + 7);
+
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII((pClock->Month & 0xf0) >> 4)); // 月高位
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII((pClock->Month) & 0x0f)); // 月低位
+        } break;
+
+        case 3: // 日
+        {
+            LCD1602_CheckBusy(); // 显示地址
+            LCD1602_WriteCMD(LINE1 + 10);
+
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII(((pClock->Day) & 0xf0) >> 4)); // 日高位
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII((pClock->Day) & 0x0f)); // 日低位
+        } break;
+
+        case 4: // 星期
+        {
+            LCD1602_CheckBusy(); // 显示地址
+            LCD1602_WriteCMD(LINE1 + 14);
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII((pClock->Week) & 0x0f)); // 星期
+        } break;
+
+        case 5: // 时
+        {
+            LCD1602_CheckBusy();
+            LCD1602_WriteCMD(LINE2 + 4);
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII((pClock->Hour & 0xf0) >> 4)); // 时高位
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII((pClock->Hour) & 0x0f)); // 时低位
+        } break;
+
+        case 6: // 分
+        {
+            LCD1602_CheckBusy();
+            LCD1602_WriteCMD(LINE2 + 7);
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII((pClock->Minute & 0xf0) >> 4)); // 分高位
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII((pClock->Minute) & 0x0f)); // 分低位
+        } break;
+
+        case 7: // 秒
+        {
+            LCD1602_CheckBusy();
+            LCD1602_WriteCMD(LINE2 + 10);
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII((pClock->Second) >> 4)); // 秒高位
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(HEX2ASCII((pClock->Second) & 0x0f)); // 秒低位
+        } break;
     }
 }

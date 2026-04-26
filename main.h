@@ -35,6 +35,7 @@ unsigned char MusicIndex        = 0;
 unsigned char code *MusicName[] = {"Haruhikage", "Keep Walking", "GGB", "Two Butterflies", "Orchid Grass", "The Coolest Ethnic Trend"};
 unsigned char code *MusicData[] = {Music_Chun, Music_Girl, Music_GGB, Music_Two, Music_Cao, Music_ZuiXuan};
 unsigned char musicNum          = sizeof(MusicName) / sizeof(MusicName[0]); // 计算歌曲数量
+unsigned char clockSetIndex = 0; // 时钟设置项索引
 void Delay1ms(unsigned int);
 void Key_Process(void);
 DAYTIME Clock; // 时钟结构体变量

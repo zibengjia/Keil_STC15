@@ -2,17 +2,19 @@
 #include "key.h"
 #include "lcd1602.h"
 
-//**************************************************************************
+sbit BeepIO = P1 ^ 6;
 
 #define SYSTEM_OSC  11059200UL // 定义晶振频率，使用UL确保为无符号长整型
 #define SOUND_SPACE 4 / 5      // 定义普通音符演奏的长度分率
-sbit BeepIO = P1 ^ 6;          // 定义输出管脚
+
+
 typedef struct {
     unsigned char code *Sound;
     unsigned char Signature;
     unsigned Octachord;
     unsigned int Speed;
 } Music;
+// 定义输出管脚
 unsigned int code FreTab[12]    = {262, 277, 294, 311, 330, 349, 369, 392, 415, 440, 466, 494}; // 原始频率表
 unsigned char code SignTab[7]   = {0, 2, 4, 5, 7, 9, 11};                                       // 1~7在频率表中的位置
 unsigned char code LengthTab[7] = {1, 2, 4, 8, 16, 32, 64};
@@ -36,7 +38,7 @@ static void DisplayPlayTime(unsigned int seconds)
     TimeStr[3] = (secs / 10) + '0';
     TimeStr[4] = (secs % 10) + '0';
 
-    LCD1602_Display_Str(LINE1+5, TimeStr);
+    LCD1602_Display_Str(LINE1 + 5, TimeStr);
 }
 
 static bit PauseRequested(void)
