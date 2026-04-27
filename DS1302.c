@@ -4,7 +4,6 @@
 // 初始化时间				  				//0	    30	  8	     2	   1	   1	  17
 unsigned char code Init[7] = {0x00, 0x30, 0x08, 0x02, 0x01, 0x01, 0x17};
 
-
 /***********************************************
 函数名称：Delay_us
 功    能：STC 1T单片机1us延时程序
@@ -214,7 +213,7 @@ void DS1302_SetTime(DAYTIME *pClock)
     DS1302_WriteData(addr, pClock->Month);
     addr += 2;
     // 写入星期
-    DS1302_WriteData(addr, pClock->Week);
+    DS1302_WriteData(addr, (pClock->Week));
     addr += 2;
     // 写入年
     DS1302_WriteData(addr, pClock->Year);

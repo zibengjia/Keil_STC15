@@ -47,13 +47,16 @@ void timer2_isr(void) interrupt 12
         UpdateTimeFlag = 1;
         T0_Cnt         = 0;
     }
-    if (T1_Cnt++ > 49) // 定时500ms
-    {
-        T1_Cnt = 0;
-        if (mode == ClockSet) {
-            ToDateNonDispBuf(clockSetIndex + 1); // 消隐当前设置项
-        } else if (mode == ClockMode) {
-            ToDateOrgDispBuf(clockSetIndex + 1, &Clock); // 恢复显示当前设置项
+    if (mode == ClockSet) {
+        T1_Cnt++;
+        if (T1_Cnt > 24) // 定时250ms
+        {
+
+            ToDateNonDispBuf(clockSetIndex); // 消隐当前设置项
+            if (T1_Cnt > 49) {
+                ToDateOrgDispBuf(clockSetIndex, &Clock); // 恢复显示当前设置项
+                T1_Cnt = 0;
+            }
         }
     }
 }
@@ -161,6 +164,46 @@ void Key_Process(void)
                 case ClockSet:
                     // 时钟校准模式下按键处理
 
+                    switch (KeyNum) {
+                        case KEY12:
+                            // 上翻
+                            if (clockSetIndex > 1) {
+                                ToDateOrgDispBuf(clockSetIndex, &Clock);
+                                clockSetIndex--;
+                            } else {
+                                ToDateOrgDispBuf(clockSetIndex, &Clock);
+                                clockSetIndex = 7; // 循环到最后一个设置项
+                            }
+                            break;
+                        case KEY13:
+                            // 下翻
+                            if (clockSetIndex < 7) {
+                                ToDateOrgDispBuf(clockSetIndex, &Clock);
+                                clockSetIndex++;
+                            } else {
+                                ToDateOrgDispBuf(clockSetIndex, &Clock);
+                                clockSetIndex = 1; // 循环到第一个设置项
+                            }
+                            break;
+                        case KEY9:
+                            // 数字加
+                            TimeSet(clockSetIndex, &Clock, 1);
+                            ToDateOrgDispBuf(clockSetIndex, &Clock);
+                            break;
+                        case KEY10:
+
+                            // 数字减
+                            TimeSet(clockSetIndex, &Clock, 0);
+                            ToDateOrgDispBuf(clockSetIndex, &Clock);
+                            break;
+                        case KEY12L:
+                            // 确认修改当前设置项
+                            DS1302_SetTime(&Clock);
+                            LCD1602_Display_Str(LINE1 + 12, "Set!");
+                            Delay1ms(300);
+                            LCD1602_Display_Clock(&Clock);
+                            break;
+                    }
                     break;
             }
         } else {
@@ -199,7 +242,8 @@ void Key_Process(void)
                             LCD1602_Display_Str(LINE2, MusicName[MusicIndex]); // 显示当前歌曲名称
                             break;
                         case ClockSet:
-                            LCD1602_Display_Str(LINE2, "ClockSet Mode");
+                            DS1302_GetTime(&Clock);        // 读取时钟
+                            LCD1602_Display_Clock(&Clock); // 显示时钟
                             break;
                         case AlarmSet:
                             LCD1602_Display_Str(LINE2, "AlarmSet Mode");
@@ -209,32 +253,4 @@ void Key_Process(void)
             }
         }
     }
-}
-void LCD1602_Display_Clock(DAYTIME *pClock)
-{
-    // 先BCD码转换为十进制
-    unsigned char DateStr[9];
-    unsigned char TimeStr[9];                        // 存储日期字符串，格式为 "YY/MM/DD"
-    DateStr[0] = ((pClock->Year >> 4) & 0x0F) + '0'; // 年十位
-    DateStr[1] = (pClock->Year & 0x0F) + '0';        // 年个位
-    DateStr[2] = '/';
-    DateStr[3] = ((pClock->Month >> 4) & 0x0F) + '0'; // 月十位
-    DateStr[4] = (pClock->Month & 0x0F) + '0';        // 月个位
-    DateStr[5] = '/';
-    DateStr[6] = ((pClock->Day >> 4) & 0 + 0x0F) + '0'; // 日十位
-    DateStr[7] = (pClock->Day & 0x0F) + '0';            // 日个位
-    DateStr[8] = '\0';                                  // 字符串结束标志
-
-    TimeStr[0] = ((pClock->Hour >> 4) & 0x0F) + '0'; // 时十位
-    TimeStr[1] = (pClock->Hour & 0x0F) + '0';        // 时个位
-    TimeStr[2] = ':';
-    TimeStr[3] = ((pClock->Minute >> 4) & 0x0F) + '0'; // 分十位
-    TimeStr[4] = (pClock->Minute & 0x0F) + '0';        // 分个位
-    TimeStr[5] = ':';
-    TimeStr[6] = ((pClock->Second >> 4) & 0x0F) + '0'; // 秒十位
-    TimeStr[7] = (pClock->Second & 0x0F) + '0';        // 秒个位
-    TimeStr[8] = '\0';                                 // 字符串结束标志
-
-    LCD1602_Display_Str(LINE1 + 3, TimeStr); // 显示日期
-    LCD1602_Display_Str(LINE2 + 3, DateStr); // 显示时间
 }

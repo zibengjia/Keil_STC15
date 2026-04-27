@@ -50,5 +50,6 @@ void LCD1602_Display_Str(unsigned char addr, unsigned char *str);
 void App_FormatDec(unsigned char *pstr, unsigned char value);
 void ToDateNonDispBuf(unsigned char set);
 void ToDateOrgDispBuf(unsigned char set, DAYTIME *pClock);
-
+void TimeSet(unsigned char set, DAYTIME *pClock, bit isAdd);
+void LCD1602_Display_Clock(DAYTIME *pClock);
 #endif

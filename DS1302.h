@@ -50,8 +50,8 @@ typedef struct datetime {
 #define Year_TOP      99 // 最大值
 #define Year_BOTTOM   0  // 最小值
 
-#define Week_TOP      7
-#define Week_BOTTOM   1
+#define Week_TOP      6
+#define Week_BOTTOM   0
 
 #define Month_TOP     12
 #define Month_BOTTOM  1

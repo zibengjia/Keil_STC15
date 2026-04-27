@@ -263,7 +263,7 @@ void ToDateNonDispBuf(unsigned char set)
         case 1: // 年
         {
             LCD1602_CheckBusy(); // 显示地址
-            LCD1602_WriteCMD(LINE1 + 4);
+            LCD1602_WriteCMD(LINE2 + 3);
 
             LCD1602_CheckBusy(); // 显示空格
             LCD1602_WriteDAT(' ');
@@ -273,7 +273,7 @@ void ToDateNonDispBuf(unsigned char set)
         case 2: // 月
         {
             LCD1602_CheckBusy(); // 显示地址
-            LCD1602_WriteCMD(LINE1 + 7);
+            LCD1602_WriteCMD(LINE2 + 6);
 
             LCD1602_CheckBusy(); // 显示空格
             LCD1602_WriteDAT(' ');
@@ -283,7 +283,7 @@ void ToDateNonDispBuf(unsigned char set)
         case 3: // 日
         {
             LCD1602_CheckBusy(); // 显示地址
-            LCD1602_WriteCMD(LINE1 + 10);
+            LCD1602_WriteCMD(LINE2 + 9);
 
             LCD1602_CheckBusy(); // 显示空格
             LCD1602_WriteDAT(' ');
@@ -293,7 +293,7 @@ void ToDateNonDispBuf(unsigned char set)
         case 4: // 星期
         {
             LCD1602_CheckBusy(); // 显示地址
-            LCD1602_WriteCMD(LINE1 + 14);
+            LCD1602_WriteCMD(LINE2 + 12);
 
             LCD1602_CheckBusy(); // 显示空格
             LCD1602_WriteDAT(' ');
@@ -303,7 +303,7 @@ void ToDateNonDispBuf(unsigned char set)
         case 5: // 时
         {
             LCD1602_CheckBusy(); // 显示地址
-            LCD1602_WriteCMD(LINE2 + 4);
+            LCD1602_WriteCMD(LINE1 + 3);
 
             LCD1602_CheckBusy(); // 显示空格
             LCD1602_WriteDAT(' ');
@@ -313,7 +313,7 @@ void ToDateNonDispBuf(unsigned char set)
         case 6: // 分
         {
             LCD1602_CheckBusy(); // 显示地址
-            LCD1602_WriteCMD(LINE2 + 7);
+            LCD1602_WriteCMD(LINE1 + 6);
 
             LCD1602_CheckBusy(); // 显示空格
             LCD1602_WriteDAT(' ');
@@ -324,7 +324,7 @@ void ToDateNonDispBuf(unsigned char set)
         case 7: // 秒
         {
             LCD1602_CheckBusy(); // 显示地址
-            LCD1602_WriteCMD(LINE2 + 10);
+            LCD1602_WriteCMD(LINE1 + 9);
 
             LCD1602_CheckBusy(); // 显示空格
             LCD1602_WriteDAT(' ');
@@ -333,7 +333,6 @@ void ToDateNonDispBuf(unsigned char set)
         } break;
     }
 }
-
 
 /***********************************************
 函数名称：ToTimeOriDispBuf
@@ -348,9 +347,8 @@ void ToDateOrgDispBuf(unsigned char set, DAYTIME *pClock)
     switch (set) {
         case 1: // 年
         {
-            LCD1602_CheckBusy(); // 显示地址
-            LCD1602_WriteCMD(LINE1 + 4);
-
+            LCD1602_CheckBusy();
+            LCD1602_WriteCMD(LINE2 + 3);
             LCD1602_CheckBusy();
             LCD1602_WriteDAT(HEX2ASCII(((pClock->Year) & 0xf0) >> 4)); // 年高位
             LCD1602_CheckBusy();
@@ -359,9 +357,10 @@ void ToDateOrgDispBuf(unsigned char set, DAYTIME *pClock)
 
         case 2: // 月
         {
-            LCD1602_CheckBusy(); // 显示地址
-            LCD1602_WriteCMD(LINE1 + 7);
-
+            LCD1602_CheckBusy();
+            LCD1602_WriteCMD(LINE2 + 5);
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT('/');
             LCD1602_CheckBusy();
             LCD1602_WriteDAT(HEX2ASCII((pClock->Month & 0xf0) >> 4)); // 月高位
             LCD1602_CheckBusy();
@@ -371,8 +370,9 @@ void ToDateOrgDispBuf(unsigned char set, DAYTIME *pClock)
         case 3: // 日
         {
             LCD1602_CheckBusy(); // 显示地址
-            LCD1602_WriteCMD(LINE1 + 10);
-
+            LCD1602_WriteCMD(LINE2 + 8);
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT('/');
             LCD1602_CheckBusy();
             LCD1602_WriteDAT(HEX2ASCII(((pClock->Day) & 0xf0) >> 4)); // 日高位
             LCD1602_CheckBusy();
@@ -382,7 +382,9 @@ void ToDateOrgDispBuf(unsigned char set, DAYTIME *pClock)
         case 4: // 星期
         {
             LCD1602_CheckBusy(); // 显示地址
-            LCD1602_WriteCMD(LINE1 + 14);
+            LCD1602_WriteCMD(LINE2 + 11);
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT('/');
             LCD1602_CheckBusy();
             LCD1602_WriteDAT(HEX2ASCII((pClock->Week) & 0x0f)); // 星期
         } break;
@@ -390,7 +392,7 @@ void ToDateOrgDispBuf(unsigned char set, DAYTIME *pClock)
         case 5: // 时
         {
             LCD1602_CheckBusy();
-            LCD1602_WriteCMD(LINE2 + 4);
+            LCD1602_WriteCMD(LINE1 + 3);
             LCD1602_CheckBusy();
             LCD1602_WriteDAT(HEX2ASCII((pClock->Hour & 0xf0) >> 4)); // 时高位
             LCD1602_CheckBusy();
@@ -400,7 +402,9 @@ void ToDateOrgDispBuf(unsigned char set, DAYTIME *pClock)
         case 6: // 分
         {
             LCD1602_CheckBusy();
-            LCD1602_WriteCMD(LINE2 + 7);
+            LCD1602_WriteCMD(LINE1 + 5);
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(':');
             LCD1602_CheckBusy();
             LCD1602_WriteDAT(HEX2ASCII((pClock->Minute & 0xf0) >> 4)); // 分高位
             LCD1602_CheckBusy();
@@ -410,11 +414,182 @@ void ToDateOrgDispBuf(unsigned char set, DAYTIME *pClock)
         case 7: // 秒
         {
             LCD1602_CheckBusy();
-            LCD1602_WriteCMD(LINE2 + 10);
+            LCD1602_WriteCMD(LINE1 + 8);
+            LCD1602_CheckBusy();
+            LCD1602_WriteDAT(':');
             LCD1602_CheckBusy();
             LCD1602_WriteDAT(HEX2ASCII((pClock->Second) >> 4)); // 秒高位
             LCD1602_CheckBusy();
             LCD1602_WriteDAT(HEX2ASCII((pClock->Second) & 0x0f)); // 秒低位
         } break;
     }
+}
+
+void BCDToDecimal(unsigned char bcd, unsigned char *decimal)
+{
+    *decimal = ((bcd >> 4) * 10) + (bcd & 0x0F);
+}
+void DecimalToBCD(unsigned char decimal, unsigned char *bcd)
+{
+    *bcd = ((decimal / 10) << 4) | (decimal % 10);
+}
+/*
+函数名称：TimeSet
+功    能：时钟设置函数
+入口参数：set:设置项索引，pClock:指向时钟结构体的指针，isAdd:增加或减少标志
+*/
+void TimeSet(unsigned char set, DAYTIME *pClock, bit isAdd)
+{
+    unsigned char add;
+    if (isAdd)
+        add = 1;
+    else
+        add = -1;
+    switch (set) {
+        case 1:
+            // 年操作
+            {
+                unsigned char decimalYear;
+                BCDToDecimal(pClock->Year, &decimalYear);
+                decimalYear += add;
+                if (decimalYear > Year_TOP) {
+                    decimalYear = Year_BOTTOM;
+                } else if (decimalYear < Year_BOTTOM) {
+                    decimalYear = Year_TOP;
+                }
+                DecimalToBCD(decimalYear, &pClock->Year);
+            }
+            break;
+        case 2:
+            // 月操作
+            {
+                unsigned char decimalMonth;
+                BCDToDecimal(pClock->Month, &decimalMonth);
+                decimalMonth += add;
+                if (decimalMonth > Month_TOP) {
+                    decimalMonth = Month_BOTTOM;
+                } else if (decimalMonth < Month_BOTTOM) {
+                    decimalMonth = Month_TOP;
+                }
+                DecimalToBCD(decimalMonth, &pClock->Month);
+            }
+            break;
+        case 3:
+            // 日操作
+            {
+                unsigned char decimalDay;
+                unsigned char month;
+                BCDToDecimal(pClock->Day, &decimalDay);
+                decimalDay += add;
+                // 考虑到不同月份的天数
+
+                BCDToDecimal(pClock->Month, &month);
+                if (month == 2) { // 二月
+                    if (decimalDay > 28) {
+                        decimalDay = 1;
+                    } else if (decimalDay < 1) {
+                        decimalDay = 28;
+                    }
+                } else if (month == 4 || month == 6 || month == 9 || month == 11) { // 小月
+                    if (decimalDay > 30) {
+                        decimalDay = 1;
+                    } else if (decimalDay < 1) {
+                        decimalDay = 30;
+                    }
+                } else { // 大月
+                    if (decimalDay > Day_TOP) {
+                        decimalDay = Day_BOTTOM;
+                    } else if (decimalDay < Day_BOTTOM) {
+                        decimalDay = Day_TOP;
+                    }
+                }
+                DecimalToBCD(decimalDay, &pClock->Day);
+            }
+            break;
+        case 4:
+            // 星期操作
+            {
+                unsigned char decimalWeek;
+                BCDToDecimal(pClock->Week, &decimalWeek);
+                decimalWeek += add;
+                if (decimalWeek > Week_TOP) {
+                    decimalWeek = Week_BOTTOM;
+                } else if (decimalWeek < Week_BOTTOM) {
+                    decimalWeek = Week_TOP;
+                }
+                DecimalToBCD(decimalWeek, &pClock->Week);
+            }
+            break;
+        case 5:
+            // 时操作
+            {
+                unsigned char decimalHour;
+                BCDToDecimal(pClock->Hour, &decimalHour);
+                decimalHour += add;
+                if (decimalHour > Hour_TOP) {
+                    decimalHour = Hour_BOTTOM;
+                } else if (decimalHour < Hour_BOTTOM) {
+                    decimalHour = Hour_TOP;
+                }
+                DecimalToBCD(decimalHour, &pClock->Hour);
+            }
+            break;
+        case 6:
+            // 分操作
+            {
+                unsigned char decimalMinute;
+                BCDToDecimal(pClock->Minute, &decimalMinute);
+                decimalMinute += add;
+                if (decimalMinute > 59) {
+                    decimalMinute = 0;
+                } else if (decimalMinute < 0) {
+                    decimalMinute = 59;
+                }
+                DecimalToBCD(decimalMinute, &pClock->Minute);
+            }
+            break;
+        case 7:
+            // 秒操作
+            {
+                unsigned char decimalSecond;
+                BCDToDecimal(pClock->Second, &decimalSecond);
+                decimalSecond += add;
+                if (decimalSecond > 59) {
+                    decimalSecond = 0;
+                } else if (decimalSecond < 0) {
+                    decimalSecond = 59;
+                }
+                DecimalToBCD(decimalSecond, &pClock->Second);
+            }
+    }
+}
+void LCD1602_Display_Clock(DAYTIME *pClock)
+{
+    // 先BCD码转换为十进制
+    unsigned char DateStr[11];
+    unsigned char TimeStr[9];                         // 存储日期字符串，格式为 "YY/MM/DD/W"
+    DateStr[0]  = ((pClock->Year >> 4) & 0x0F) + '0'; // 年十位
+    DateStr[1]  = (pClock->Year & 0x0F) + '0';        // 年个位
+    DateStr[2]  = '/';
+    DateStr[3]  = ((pClock->Month >> 4) & 0x0F) + '0'; // 月十位
+    DateStr[4]  = (pClock->Month & 0x0F) + '0';        // 月个位
+    DateStr[5]  = '/';
+    DateStr[6]  = ((pClock->Day >> 4) & 0 + 0x0F) + '0'; // 日十位
+    DateStr[7]  = (pClock->Day & 0x0F) + '0';            // 日个位
+    DateStr[8]  = '/';
+    DateStr[9]  = (pClock->Week & 0x0F) + '0'; // 星期，显示为0-6
+    DateStr[10] = '\0';                        // 字符串结束标志
+
+    TimeStr[0] = ((pClock->Hour >> 4) & 0x0F) + '0'; // 时十位
+    TimeStr[1] = (pClock->Hour & 0x0F) + '0';        // 时个位
+    TimeStr[2] = ':';
+    TimeStr[3] = ((pClock->Minute >> 4) & 0x0F) + '0'; // 分十位
+    TimeStr[4] = (pClock->Minute & 0x0F) + '0';        // 分个位
+    TimeStr[5] = ':';
+    TimeStr[6] = ((pClock->Second >> 4) & 0x0F) + '0'; // 秒十位
+    TimeStr[7] = (pClock->Second & 0x0F) + '0';        // 秒个位
+    TimeStr[8] = '\0';                                 // 字符串结束标志
+
+    LCD1602_Display_Str(LINE1 + 3, TimeStr); // 显示日期
+    LCD1602_Display_Str(LINE2 + 3, DateStr); // 显示时间
 }
