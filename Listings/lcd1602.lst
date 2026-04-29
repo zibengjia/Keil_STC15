@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   LCD1602                                                           04/18/2026 23:02:51 PAGE 1   
+C51 COMPILER V9.59.0.0   LCD1602                                                           04/29/2026 18:27:09 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE LCD1602
@@ -9,270 +9,628 @@ COMPILER INVOKED BY: C:\Users\Luna\AppData\Local\Keil_v5\C51\BIN\C51.EXE lcd1602
 line level    source
 
    1          #include "lcd1602.h"
-   2          //包含该函数可以使用_nop_()函数
+   2          
    3          #include <intrins.h>
    4          /***********************************************
    5          函数名称：LCD1602_Delay1us
    6          功    能：STC 1T单片机1us延时程序
    7          入口参数：us:延时的微秒数
-   8          返 回 值：无    
+   8          返 回 值：无
    9          备    注：外部时钟11.0592MHz
   10          ************************************************/
   11          void LCD1602_Delay1us(unsigned int us)
   12          {
-  13   1        while( us--)
-  14   1        {
-  15   2          _nop_(); 
-  16   2        }             
-  17   1      }
-  18          /***********************************************
-  19          函数名称：LCD1602_Delay1ms
-  20          功    能：STC 1T单片机1ms延时程序
-  21          入口参数：ms:延时的毫秒数
-  22          返 回 值：无    
-  23          备    注：示波器实测1.05ms 时钟11.0592MHz
-  24          ************************************************/
-  25          void LCD1602_Delay1ms(unsigned int ms)
-  26          {
-  27   1        unsigned int De_Cnt;
-  28   1        while( (ms--) != 0)
-  29   1        {
-  30   2          for(De_Cnt = 0; De_Cnt < 600; De_Cnt++); 
-  31   2        }             
-  32   1      }
-  33          /*************************************
-  34          * 函 数 名: LCD1602_WriteCMD
-  35          * 函数功能: 向lcd1602写指令
-  36          * 入口参数: cmd:指令
-  37          * 返    回: 无
-  38          * 备    注：无
-  39          **************************************/
-  40          void LCD1602_WriteCMD(unsigned char cmd)
-  41          {
-  42   1        EN_Clr();
-  43   1        RS_Clr();
-  44   1        RW_Clr();
-  45   1        LCD1602_Delay1us(10);
-  46   1        EN_Set(); 
-  47   1        LCD1602_Delay1us(10);
-  48   1        DataPort=cmd;
-  49   1        LCD1602_Delay1us(10);
-  50   1        EN_Clr();
-  51   1      }
-  52          /***********************************************
-  53          函数名称：LCD1602_WriteDAT
-  54          功    能：向lcd1602写数据
-C51 COMPILER V9.59.0.0   LCD1602                                                           04/18/2026 23:02:51 PAGE 2   
+  13   1          while (us--) {
+  14   2              _nop_();
+  15   2          }
+  16   1      }
+  17          /***********************************************
+  18          函数名称：LCD1602_Delay1ms
+  19          功    能：STC 1T单片机1ms延时程序
+  20          入口参数：ms:延时的毫秒数
+  21          返 回 值：无
+  22          备    注：示波器实测1.05ms 时钟11.0592MHz
+  23          ************************************************/
+  24          void LCD1602_Delay1ms(unsigned int ms)
+  25          {
+  26   1          unsigned int De_Cnt;
+  27   1          while ((ms--) != 0) {
+  28   2              for (De_Cnt = 0; De_Cnt < 600; De_Cnt++);
+  29   2          }
+  30   1      }
+  31          /*************************************
+  32           * 函 数 名: LCD1602_WriteCMD
+  33           * 函数功能: 向lcd1602写指令
+  34           * 入口参数: cmd:指令
+  35           * 返    回: 无
+  36           * 备    注：无
+  37           **************************************/
+  38          void LCD1602_WriteCMD(unsigned char cmd)
+  39          {
+  40   1          EN_Clr();
+  41   1          RS_Clr();
+  42   1          RW_Clr();
+  43   1          LCD1602_Delay1us(10);
+  44   1          EN_Set();
+  45   1          LCD1602_Delay1us(10);
+  46   1          DataPort = cmd;
+  47   1          LCD1602_Delay1us(10);
+  48   1          EN_Clr();
+  49   1      }
+  50          /***********************************************
+  51          函数名称：LCD1602_WriteDAT
+  52          功    能：向lcd1602写数据
+  53          入口参数：dat：数据
+  54          返 回 值：无
+C51 COMPILER V9.59.0.0   LCD1602                                                           04/29/2026 18:27:09 PAGE 2   
 
-  55          入口参数：dat：数据
-  56          返 回 值：无    
-  57          备    注：无
-  58          ************************************************/
-  59          void LCD1602_WriteDAT(unsigned char dat)
-  60          {
-  61   1        EN_Clr();
-  62   1        RS_Set();
-  63   1        RW_Clr();
-  64   1        LCD1602_Delay1us(10);
-  65   1        EN_Set(); 
-  66   1        LCD1602_Delay1us(10);
-  67   1        DataPort=dat;
-  68   1        LCD1602_Delay1us(10);
-  69   1        EN_Clr();
-  70   1      }
-  71          /***********************************************
-  72          函数名称：LCD1602_CheckBusy
-  73          功    能：检测lcd1602忙信号
-  74          入口参数：无
-  75          返 回 值：无    
-  76          备    注：无
-  77          ************************************************/
-  78          void LCD1602_CheckBusy(void)
-  79          {
-  80   1        unsigned char temp;
-  81   1              DataPort=0xff;            //做输入先置高,51系列单片机读之前需要置高
-  82   1        while(1)
-  83   1        {    
-  84   2          EN_Clr();                      
-  85   2          RS_Clr();
-  86   2          RW_Set();
-  87   2          LCD1602_Delay1us(10);
-  88   2          EN_Set();
-  89   2          LCD1602_Delay1us(10);
-  90   2          temp=DataPort;    //读取忙通道数据
-  91   2          LCD1602_Delay1us(10);
-  92   2          EN_Clr();
-  93   2          if((temp&0x80)!=0x80)
-  94   2          {    
-  95   3            break;
-  96   3          }
-  97   2        }
-  98   1      }
-  99          /***********************************************
- 100          函数名称：LCD1602_Clear_Line
- 101          功    能：lcd1602清除行函数
- 102          入口参数：line：行地址
- 103          返 回 值：无    
- 104          备    注：无
- 105          ************************************************/
- 106          void LCD1602_Clear_Line(unsigned char line)
- 107          {
- 108   1              unsigned char i;
- 109   1              if( (line&LINE2)==LINE2 ) //判断行地址
- 110   1              {
- 111   2                      line=LINE2;     
- 112   2              }
- 113   1              else
- 114   1              {
- 115   2                      line=LINE1;     
- 116   2              }
-C51 COMPILER V9.59.0.0   LCD1602                                                           04/18/2026 23:02:51 PAGE 3   
+  55          备    注：无
+  56          ************************************************/
+  57          void LCD1602_WriteDAT(unsigned char dat)
+  58          {
+  59   1          EN_Clr();
+  60   1          RS_Set();
+  61   1          RW_Clr();
+  62   1          LCD1602_Delay1us(10);
+  63   1          EN_Set();
+  64   1          LCD1602_Delay1us(10);
+  65   1          DataPort = dat;
+  66   1          LCD1602_Delay1us(10);
+  67   1          EN_Clr();
+  68   1      }
+  69          /***********************************************
+  70          函数名称：LCD1602_CheckBusy
+  71          功    能：检测lcd1602忙信号
+  72          入口参数：无
+  73          返 回 值：无
+  74          备    注：无
+  75          ************************************************/
+  76          void LCD1602_CheckBusy(void)
+  77          {
+  78   1          unsigned char temp;
+  79   1          DataPort = 0xff; // 做输入先置高,51系列单片机读之前需要置高
+  80   1          while (1) {
+  81   2              EN_Clr();
+  82   2              RS_Clr();
+  83   2              RW_Set();
+  84   2              LCD1602_Delay1us(10);
+  85   2              EN_Set();
+  86   2              LCD1602_Delay1us(10);
+  87   2              temp = DataPort; // 读取忙通道数据
+  88   2              LCD1602_Delay1us(10);
+  89   2              EN_Clr();
+  90   2              if ((temp & 0x80) != 0x80) {
+  91   3                  break;
+  92   3              }
+  93   2          }
+  94   1      }
+  95          /***********************************************
+  96          函数名称：LCD1602_Clear_Line
+  97          功    能：lcd1602清除行函数
+  98          入口参数：line：行地址
+  99          返 回 值：无
+ 100          备    注：无
+ 101          ************************************************/
+ 102          void LCD1602_Clear_Line(unsigned char line)
+ 103          {
+ 104   1          unsigned char i;
+ 105   1          if ((line & LINE2) == LINE2) // 判断行地址
+ 106   1          {
+ 107   2              line = LINE2;
+ 108   2          } else {
+ 109   2              line = LINE1;
+ 110   2          }
+ 111   1          LCD1602_CheckBusy();
+ 112   1          LCD1602_WriteCMD(line);
+ 113   1          for (i = 0; i < 16; i++) // 写入空格，清除行
+ 114   1          {
+ 115   2              LCD1602_CheckBusy();
+ 116   2              LCD1602_WriteDAT(' ');
+C51 COMPILER V9.59.0.0   LCD1602                                                           04/29/2026 18:27:09 PAGE 3   
 
- 117   1              LCD1602_CheckBusy();
- 118   1        LCD1602_WriteCMD(line);
- 119   1              for(i=0;i<16;i++)                                       //写入空格，清除行
- 120   1              {
- 121   2                      LCD1602_CheckBusy();
- 122   2          LCD1602_WriteDAT(' ');      
- 123   2              }       
- 124   1      }
- 125          /***********************************************
- 126          函数名称：LCD1602_Display_Str
- 127          功    能：lcd1602显示字符函数
- 128          入口参数：str指针地址
- 129          返 回 值：无    
- 130          备    注：无
- 131          ************************************************/
- 132          void LCD1602_Display_Str(unsigned char addr,unsigned char* str)
- 133          {
- 134   1              LCD1602_Clear_Line(addr);
- 135   1      
- 136   1              //设置地址 
- 137   1              LCD1602_CheckBusy();
- 138   1        LCD1602_WriteCMD(addr);
- 139   1      
- 140   1              while(*str!='\0')             //未到字符串末尾
- 141   1        {
- 142   2                      LCD1602_CheckBusy();
- 143   2          LCD1602_WriteDAT(*str); 
- 144   2                      str++;
- 145   2        }
- 146   1      }
- 147          /***********************************************
- 148          函数名称：LCD1602_Init
- 149          功    能：LCD1602初始化
- 150          入口参数：无
- 151          返 回 值：无    
- 152          备    注：详见数据手册定义。
- 153          ************************************************/
- 154          void LCD1602_Init(void)  
- 155          {       
- 156   1              //初始化P0口为准双向口
- 157   1              P0M1 =0x00;  
- 158   1              P0M0 =0x00; 
- 159   1              
- 160   1              //初始化P41,P42口为准双向口
- 161   1              P4M1 &=~( (1<<1) | (1<<2) );  
- 162   1              P4M0 &=~( (1<<1) | (1<<2) ); 
- 163   1              
- 164   1              //初始化P37口为准双向口
- 165   1              P3M1 &=~(1<<7);  
- 166   1              P3M0 &=~(1<<7);   
- 167   1                              
- 168   1              //分析
- 169   1              //  1<<0等价于0x01 即 0000 0001
- 170   1              //  1<<1等价于0x02 即 0000 0010
- 171   1              //  1<<2等价于0x04 即 0000 0100
- 172   1              //  1<<3等价于0x08 即 0000 1000
- 173   1              //  以此类推1<<n 即第n位为1，其余位是0
+ 117   2          }
+ 118   1      }
+ 119          /***********************************************
+ 120          函数名称：LCD1602_Display_Str
+ 121          功    能：lcd1602显示字符函数
+ 122          入口参数：str指针地址
+ 123          返 回 值：无
+ 124          备    注：无
+ 125          ************************************************/
+ 126          void LCD1602_Display_Str(unsigned char addr, unsigned char *str)
+ 127          {
+ 128   1          LCD1602_Clear_Line(addr);
+ 129   1      
+ 130   1          // 设置地址
+ 131   1          LCD1602_CheckBusy();
+ 132   1          LCD1602_WriteCMD(addr);
+ 133   1      
+ 134   1          while (*str != '\0') // 未到字符串末尾
+ 135   1          {
+ 136   2              LCD1602_CheckBusy();
+ 137   2              LCD1602_WriteDAT(*str);
+ 138   2              str++;
+ 139   2          }
+ 140   1      }
+ 141          /***********************************************
+ 142          函数名称：LCD1602_Init
+ 143          功    能：LCD1602初始化
+ 144          入口参数：无
+ 145          返 回 值：无
+ 146          备    注：详见数据手册定义。
+ 147          ************************************************/
+ 148          void LCD1602_Init(void)
+ 149          {
+ 150   1          // 初始化P0口为准双向口
+ 151   1          P0M1 = 0x00;
+ 152   1          P0M0 = 0x00;
+ 153   1      
+ 154   1          // 初始化P41,P42口为准双向口
+ 155   1          P4M1 &= ~((1 << 1) | (1 << 2));
+ 156   1          P4M0 &= ~((1 << 1) | (1 << 2));
+ 157   1      
+ 158   1          // 初始化P37口为准双向口
+ 159   1          P3M1 &= ~(1 << 7);
+ 160   1          P3M0 &= ~(1 << 7);
+ 161   1      
+ 162   1          // 分析
+ 163   1          //   1<<0等价于0x01 即 0000 0001
+ 164   1          //   1<<1等价于0x02 即 0000 0010
+ 165   1          //   1<<2等价于0x04 即 0000 0100
+ 166   1          //   1<<3等价于0x08 即 0000 1000
+ 167   1          //   以此类推1<<n 即第n位为1，其余位是0
+ 168   1      
+ 169   1          //  x |=(1<<n)  即对x执行按位取或
+ 170   1          //  即x中的第n位置为1，不改变其他位状态
+ 171   1      
+ 172   1          //  y &=~(1<<n)  即将1<<n按位取反，然后对y按位取与
+ 173   1          //  即y中的第n位置为0，不改变其他位状态
  174   1      
- 175   1              //  x |=(1<<n)  即对x执行按位取或 
- 176   1              //  即x中的第n位置为1，不改变其他位状态  
- 177   1              
- 178   1              //  y &=~(1<<n)  即将1<<n按位取反，然后对y按位取与 
-C51 COMPILER V9.59.0.0   LCD1602                                                           04/18/2026 23:02:51 PAGE 4   
+ 175   1          LCD1602_Delay1ms(15);   // 上电延时15ms
+ 176   1          LCD1602_WriteCMD(0x38); // 写显示指令(不检测忙信号)
+ 177   1          LCD1602_Delay1ms(5);
+ 178   1          LCD1602_WriteCMD(0x38); // 写显示指令(不检测忙信号)
+C51 COMPILER V9.59.0.0   LCD1602                                                           04/29/2026 18:27:09 PAGE 4   
 
- 179   1              //  即y中的第n位置为0，不改变其他位状态     
- 180   1      
- 181   1        LCD1602_Delay1ms(15);   //上电延时15ms
- 182   1        LCD1602_WriteCMD(0x38); //写显示指令(不检测忙信号)
- 183   1        LCD1602_Delay1ms(5);
- 184   1        LCD1602_WriteCMD(0x38); //写显示指令(不检测忙信号)
- 185   1        LCD1602_Delay1ms(5);
- 186   1        LCD1602_WriteCMD(0x38); //写显示指令(不检测忙信号)
- 187   1        LCD1602_CheckBusy();
- 188   1        LCD1602_WriteCMD(0x38); //写显示指令
- 189   1        LCD1602_CheckBusy();
- 190   1        LCD1602_WriteCMD(0x08); //显示关闭
- 191   1        LCD1602_CheckBusy();
- 192   1        LCD1602_WriteCMD(0x01); //清屏
- 193   1        LCD1602_CheckBusy();
- 194   1        LCD1602_WriteCMD(0x06); //显示光标移动设置
- 195   1        LCD1602_CheckBusy();
- 196   1        LCD1602_WriteCMD(0x0c); //显示开及光标设置  
- 197   1              
- 198   1              //显示欢迎信息
- 199   1              LCD1602_Display_Str(LINE1+1,"Welcome To Use!");
- 200   1              LCD1602_Display_Str(LINE2+3,"FireDragon");
- 201   1      }
- 202          /***********************************************
- 203          函数名称：App_FormatDec
- 204          功    能：整型数据转字符串函数
- 205          入口参数：value:整型数据
- 206          返 回 值：pstr：指向字符串的指针。      
- 207          备    注：无
- 208          ************************************************/
- 209          void  App_FormatDec (unsigned char *pstr, unsigned char value)
- 210          {
- 211   1        unsigned char   i;
- 212   1        unsigned int   mult; 
- 213   1        unsigned int   nbr;
- 214   1      
- 215   1        mult  = 1;
- 216   1              //因为这里要处理的value输入格式为三位数，例如123
- 217   1              //故初始让mult=100
- 218   1        for (i = 0; i < 2; i++) 
- 219   1              {
- 220   2          mult *= 10;
- 221   2        }
- 222   1      
- 223   1              i=0;
- 224   1        while (mult > 0) 
- 225   1              {
- 226   2                      i++;
- 227   2                      //第一次整除，获取最高位数据，例如123/100=1
- 228   2                      //其他位类推
- 229   2          nbr = value / mult;
- 230   2                      //如果得到的数据不是0
- 231   2          if (nbr != 0) 
- 232   2                {
- 233   3                              //整型数据+'0'，将自动转换成字符数据，例如1+'0'将变成字符'1'
- 234   3            *pstr = nbr + '0';
- 235   3          } 
- 236   2                else
- 237   2                      {   
- 238   3                              //如果数据是0，则直接转换成字符'0'          
- 239   3            *pstr = '0';
- 240   3          }
-C51 COMPILER V9.59.0.0   LCD1602                                                           04/18/2026 23:02:51 PAGE 5   
+ 179   1          LCD1602_Delay1ms(5);
+ 180   1          LCD1602_WriteCMD(0x38); // 写显示指令(不检测忙信号)
+ 181   1          LCD1602_CheckBusy();
+ 182   1          LCD1602_WriteCMD(0x38); // 写显示指令
+ 183   1          LCD1602_CheckBusy();
+ 184   1          LCD1602_WriteCMD(0x08); // 显示关闭
+ 185   1          LCD1602_CheckBusy();
+ 186   1          LCD1602_WriteCMD(0x01); // 清屏
+ 187   1          LCD1602_CheckBusy();
+ 188   1          LCD1602_WriteCMD(0x06); // 显示光标移动设置
+ 189   1          LCD1602_CheckBusy();
+ 190   1          LCD1602_WriteCMD(0x0c); // 显示开及光标设置
+ 191   1      
+ 192   1          // 显示欢迎信息
+ 193   1          LCD1602_Display_Str(LINE1 + 3, "MainMenu");
+ 194   1          LCD1602_Display_Str(LINE2 + 4, "Welcome!");
+ 195   1      }
+ 196          /***********************************************
+ 197          函数名称：App_FormatDec
+ 198          功    能：整型数据转字符串函数
+ 199          入口参数：value:整型数据
+ 200          返 回 值：pstr：指向字符串的指针。
+ 201          备    注：无
+ 202          ************************************************/
+ 203          void App_FormatDec(unsigned char *pstr, unsigned char value)
+ 204          {
+ 205   1          unsigned char i;
+ 206   1          unsigned int mult;
+ 207   1          unsigned int nbr;
+ 208   1      
+ 209   1          mult = 1;
+ 210   1          // 因为这里要处理的value输入格式为三位数，例如123
+ 211   1          // 故初始让mult=100
+ 212   1          for (i = 0; i < 2; i++) {
+ 213   2              mult *= 10;
+ 214   2          }
+ 215   1      
+ 216   1          i = 0;
+ 217   1          while (mult > 0) {
+ 218   2              i++;
+ 219   2              // 第一次整除，获取最高位数据，例如123/100=1
+ 220   2              // 其他位类推
+ 221   2              nbr = value / mult;
+ 222   2              // 如果得到的数据不是0
+ 223   2              if (nbr != 0) {
+ 224   3                  // 整型数据+'0'，将自动转换成字符数据，例如1+'0'将变成字符'1'
+ 225   3                  *pstr = nbr + '0';
+ 226   3              } else {
+ 227   3                  // 如果数据是0，则直接转换成字符'0'
+ 228   3                  *pstr = '0';
+ 229   3              }
+ 230   2              // 移动指针，进行其他位数据处理
+ 231   2              pstr++;
+ 232   2              value %= mult;
+ 233   2              mult /= 10;
+ 234   2          }
+ 235   1      }
+ 236          
+ 237          /***********************************************
+ 238          函数名称：HEX2ASCII
+ 239          功    能：4位十六进制数转ASCII字符
+ 240          入口参数：hex:0x00~0x0F
+C51 COMPILER V9.59.0.0   LCD1602                                                           04/29/2026 18:27:09 PAGE 5   
 
- 241   2                      //移动指针，进行其他位数据处理
- 242   2          pstr++;
- 243   2          value %= mult;
- 244   2          mult  /= 10;
- 245   2        }
- 246   1      }
- 247          
+ 241          返 回 值：对应ASCII字符
+ 242          备    注：无
+ 243          ************************************************/
+ 244          static unsigned char HEX2ASCII(unsigned char hex)
+ 245          {
+ 246   1          hex &= 0x0F;
+ 247   1          if (hex < 10) {
+ 248   2              return (unsigned char)('0' + hex);
+ 249   2          }
+ 250   1          return (unsigned char)('A' + (hex - 10));
+ 251   1      }
+ 252          
+ 253          /***********************************************
+ 254          函数名称：ToDateNonDispBuf
+ 255          功    能：时钟设置部分消隐
+ 256          入口参数：无
+ 257          返 回 值：无
+ 258          备    注：无
+ 259          ************************************************/
+ 260          void ToDateNonDispBuf(unsigned char set)
+ 261          {
+ 262   1          switch (set) {
+ 263   2              case 1: // 年
+ 264   2              {
+ 265   3                  LCD1602_CheckBusy(); // 显示地址
+ 266   3                  LCD1602_WriteCMD(LINE2 + 3);
+ 267   3      
+ 268   3                  LCD1602_CheckBusy(); // 显示空格
+ 269   3                  LCD1602_WriteDAT(' ');
+ 270   3                  LCD1602_CheckBusy();
+ 271   3                  LCD1602_WriteDAT(' ');
+ 272   3              } break;
+ 273   2              case 2: // 月
+ 274   2              {
+ 275   3                  LCD1602_CheckBusy(); // 显示地址
+ 276   3                  LCD1602_WriteCMD(LINE2 + 6);
+ 277   3      
+ 278   3                  LCD1602_CheckBusy(); // 显示空格
+ 279   3                  LCD1602_WriteDAT(' ');
+ 280   3                  LCD1602_CheckBusy();
+ 281   3                  LCD1602_WriteDAT(' ');
+ 282   3              } break;
+ 283   2              case 3: // 日
+ 284   2              {
+ 285   3                  LCD1602_CheckBusy(); // 显示地址
+ 286   3                  LCD1602_WriteCMD(LINE2 + 9);
+ 287   3      
+ 288   3                  LCD1602_CheckBusy(); // 显示空格
+ 289   3                  LCD1602_WriteDAT(' ');
+ 290   3                  LCD1602_CheckBusy();
+ 291   3                  LCD1602_WriteDAT(' ');
+ 292   3              } break;
+ 293   2              case 4: // 星期
+ 294   2              {
+ 295   3                  LCD1602_CheckBusy(); // 显示地址
+ 296   3                  LCD1602_WriteCMD(LINE2 + 12);
+ 297   3      
+ 298   3                  LCD1602_CheckBusy(); // 显示空格
+ 299   3                  LCD1602_WriteDAT(' ');
+ 300   3                  LCD1602_CheckBusy();
+ 301   3                  LCD1602_WriteDAT(' ');
+ 302   3              } break;
+C51 COMPILER V9.59.0.0   LCD1602                                                           04/29/2026 18:27:09 PAGE 6   
+
+ 303   2              case 5: // 时
+ 304   2              {
+ 305   3                  LCD1602_CheckBusy(); // 显示地址
+ 306   3                  LCD1602_WriteCMD(LINE1 + 3);
+ 307   3      
+ 308   3                  LCD1602_CheckBusy(); // 显示空格
+ 309   3                  LCD1602_WriteDAT(' ');
+ 310   3                  LCD1602_CheckBusy();
+ 311   3                  LCD1602_WriteDAT(' ');
+ 312   3              } break;
+ 313   2              case 6: // 分
+ 314   2              {
+ 315   3                  LCD1602_CheckBusy(); // 显示地址
+ 316   3                  LCD1602_WriteCMD(LINE1 + 6);
+ 317   3      
+ 318   3                  LCD1602_CheckBusy(); // 显示空格
+ 319   3                  LCD1602_WriteDAT(' ');
+ 320   3                  LCD1602_CheckBusy();
+ 321   3                  LCD1602_WriteDAT(' ');
+ 322   3              } break;
+ 323   2      
+ 324   2              case 7: // 秒
+ 325   2              {
+ 326   3                  LCD1602_CheckBusy(); // 显示地址
+ 327   3                  LCD1602_WriteCMD(LINE1 + 9);
+ 328   3      
+ 329   3                  LCD1602_CheckBusy(); // 显示空格
+ 330   3                  LCD1602_WriteDAT(' ');
+ 331   3                  LCD1602_CheckBusy();
+ 332   3                  LCD1602_WriteDAT(' ');
+ 333   3              } break;
+ 334   2          }
+ 335   1      }
+ 336          
+ 337          /***********************************************
+ 338          函数名称：ToTimeOriDispBuf
+ 339          功    能：显示消隐前的时间值
+ 340          入口参数：无
+ 341          返 回 值：无
+ 342          备    注：无
+ 343          ************************************************/
+ 344          
+ 345          void ToDateOrgDispBuf(unsigned char set, DAYTIME *pClock)
+ 346          {
+ 347   1          switch (set) {
+ 348   2              case 1: // 年
+ 349   2              {
+ 350   3                  LCD1602_CheckBusy();
+ 351   3                  LCD1602_WriteCMD(LINE2 + 3);
+ 352   3                  LCD1602_CheckBusy();
+ 353   3                  LCD1602_WriteDAT(HEX2ASCII(((pClock->Year) & 0xf0) >> 4)); // 年高位
+ 354   3                  LCD1602_CheckBusy();
+ 355   3                  LCD1602_WriteDAT(HEX2ASCII((pClock->Year) & 0x0f)); // 年低位
+ 356   3              } break;
+ 357   2      
+ 358   2              case 2: // 月
+ 359   2              {
+ 360   3                  LCD1602_CheckBusy();
+ 361   3                  LCD1602_WriteCMD(LINE2 + 5);
+ 362   3                  LCD1602_CheckBusy();
+ 363   3                  LCD1602_WriteDAT('/');
+ 364   3                  LCD1602_CheckBusy();
+C51 COMPILER V9.59.0.0   LCD1602                                                           04/29/2026 18:27:09 PAGE 7   
+
+ 365   3                  LCD1602_WriteDAT(HEX2ASCII((pClock->Month & 0xf0) >> 4)); // 月高位
+ 366   3                  LCD1602_CheckBusy();
+ 367   3                  LCD1602_WriteDAT(HEX2ASCII((pClock->Month) & 0x0f)); // 月低位
+ 368   3              } break;
+ 369   2      
+ 370   2              case 3: // 日
+ 371   2              {
+ 372   3                  LCD1602_CheckBusy(); // 显示地址
+ 373   3                  LCD1602_WriteCMD(LINE2 + 8);
+ 374   3                  LCD1602_CheckBusy();
+ 375   3                  LCD1602_WriteDAT('/');
+ 376   3                  LCD1602_CheckBusy();
+ 377   3                  LCD1602_WriteDAT(HEX2ASCII(((pClock->Day) & 0xf0) >> 4)); // 日高位
+ 378   3                  LCD1602_CheckBusy();
+ 379   3                  LCD1602_WriteDAT(HEX2ASCII((pClock->Day) & 0x0f)); // 日低位
+ 380   3              } break;
+ 381   2      
+ 382   2              case 4: // 星期
+ 383   2              {
+ 384   3                  LCD1602_CheckBusy(); // 显示地址
+ 385   3                  LCD1602_WriteCMD(LINE2 + 11);
+ 386   3                  LCD1602_CheckBusy();
+ 387   3                  LCD1602_WriteDAT('/');
+ 388   3                  LCD1602_CheckBusy();
+ 389   3                  LCD1602_WriteDAT(HEX2ASCII((pClock->Week) & 0x0f)); // 星期
+ 390   3              } break;
+ 391   2      
+ 392   2              case 5: // 时
+ 393   2              {
+ 394   3                  LCD1602_CheckBusy();
+ 395   3                  LCD1602_WriteCMD(LINE1 + 3);
+ 396   3                  LCD1602_CheckBusy();
+ 397   3                  LCD1602_WriteDAT(HEX2ASCII((pClock->Hour & 0xf0) >> 4)); // 时高位
+ 398   3                  LCD1602_CheckBusy();
+ 399   3                  LCD1602_WriteDAT(HEX2ASCII((pClock->Hour) & 0x0f)); // 时低位
+ 400   3              } break;
+ 401   2      
+ 402   2              case 6: // 分
+ 403   2              {
+ 404   3                  LCD1602_CheckBusy();
+ 405   3                  LCD1602_WriteCMD(LINE1 + 5);
+ 406   3                  LCD1602_CheckBusy();
+ 407   3                  LCD1602_WriteDAT(':');
+ 408   3                  LCD1602_CheckBusy();
+ 409   3                  LCD1602_WriteDAT(HEX2ASCII((pClock->Minute & 0xf0) >> 4)); // 分高位
+ 410   3                  LCD1602_CheckBusy();
+ 411   3                  LCD1602_WriteDAT(HEX2ASCII((pClock->Minute) & 0x0f)); // 分低位
+ 412   3              } break;
+ 413   2      
+ 414   2              case 7: // 秒
+ 415   2              {
+ 416   3                  LCD1602_CheckBusy();
+ 417   3                  LCD1602_WriteCMD(LINE1 + 8);
+ 418   3                  LCD1602_CheckBusy();
+ 419   3                  LCD1602_WriteDAT(':');
+ 420   3                  LCD1602_CheckBusy();
+ 421   3                  LCD1602_WriteDAT(HEX2ASCII((pClock->Second) >> 4)); // 秒高位
+ 422   3                  LCD1602_CheckBusy();
+ 423   3                  LCD1602_WriteDAT(HEX2ASCII((pClock->Second) & 0x0f)); // 秒低位
+ 424   3              } break;
+ 425   2          }
+ 426   1      }
+C51 COMPILER V9.59.0.0   LCD1602                                                           04/29/2026 18:27:09 PAGE 8   
+
+ 427          
+ 428          void BCDToDecimal(unsigned char bcd, unsigned char *decimal)
+ 429          {
+ 430   1          *decimal = ((bcd >> 4) * 10) + (bcd & 0x0F);
+ 431   1      }
+ 432          void DecimalToBCD(unsigned char decimal, unsigned char *bcd)
+ 433          {
+ 434   1          *bcd = ((decimal / 10) << 4) | (decimal % 10);
+ 435   1      }
+ 436          /*
+ 437          函数名称：TimeSet
+ 438          功    能：时钟设置函数
+ 439          入口参数：set:设置项索引，pClock:指向时钟结构体的指针，isAdd:增加或减少标志
+ 440          */
+ 441          void TimeSet(unsigned char set, DAYTIME *pClock, bit isAdd)
+ 442          {
+ 443   1          unsigned char add;
+ 444   1          if (isAdd)
+ 445   1              add = 1;
+ 446   1          else
+ 447   1              add = -1;
+ 448   1          switch (set) {
+ 449   2              case 1:
+ 450   2                  // 年操作
+ 451   2                  {
+ 452   3                      unsigned char decimalYear;
+ 453   3                      BCDToDecimal(pClock->Year, &decimalYear);
+ 454   3                      decimalYear += add;
+ 455   3                      if (decimalYear > Year_TOP) {
+ 456   4                          decimalYear = Year_BOTTOM;
+ 457   4                      } else if (decimalYear < Year_BOTTOM) {
+ 458   4                          decimalYear = Year_TOP;
+ 459   4                      }
+ 460   3                      DecimalToBCD(decimalYear, &pClock->Year);
+ 461   3                  }
+ 462   2                  break;
+ 463   2              case 2:
+ 464   2                  // 月操作
+ 465   2                  {
+ 466   3                      unsigned char decimalMonth;
+ 467   3                      BCDToDecimal(pClock->Month, &decimalMonth);
+ 468   3                      decimalMonth += add;
+ 469   3                      if (decimalMonth > Month_TOP) {
+ 470   4                          decimalMonth = Month_BOTTOM;
+ 471   4                      } else if (decimalMonth < Month_BOTTOM) {
+ 472   4                          decimalMonth = Month_TOP;
+ 473   4                      }
+ 474   3                      DecimalToBCD(decimalMonth, &pClock->Month);
+ 475   3                  }
+ 476   2                  break;
+ 477   2              case 3:
+ 478   2                  // 日操作
+ 479   2                  {
+ 480   3                      unsigned char decimalDay;
+ 481   3                      unsigned char month;
+ 482   3                      BCDToDecimal(pClock->Day, &decimalDay);
+ 483   3                      decimalDay += add;
+ 484   3                      // 考虑到不同月份的天数
+ 485   3      
+ 486   3                      BCDToDecimal(pClock->Month, &month);
+ 487   3                      if (month == 2) { // 二月
+ 488   4                          if (decimalDay > 28) {
+C51 COMPILER V9.59.0.0   LCD1602                                                           04/29/2026 18:27:09 PAGE 9   
+
+ 489   5                              decimalDay = 1;
+ 490   5                          } else if (decimalDay < 1) {
+ 491   5                              decimalDay = 28;
+ 492   5                          }
+ 493   4                      } else if (month == 4 || month == 6 || month == 9 || month == 11) { // 小月
+ 494   4                          if (decimalDay > 30) {
+ 495   5                              decimalDay = 1;
+ 496   5                          } else if (decimalDay < 1) {
+ 497   5                              decimalDay = 30;
+ 498   5                          }
+ 499   4                      } else { // 大月
+ 500   4                          if (decimalDay > Day_TOP) {
+ 501   5                              decimalDay = Day_BOTTOM;
+ 502   5                          } else if (decimalDay < Day_BOTTOM) {
+ 503   5                              decimalDay = Day_TOP;
+ 504   5                          }
+ 505   4                      }
+ 506   3                      DecimalToBCD(decimalDay, &pClock->Day);
+ 507   3                  }
+ 508   2                  break;
+ 509   2              case 4:
+ 510   2                  // 星期操作
+ 511   2                  {
+ 512   3                      unsigned char decimalWeek;
+ 513   3                      BCDToDecimal(pClock->Week, &decimalWeek);
+ 514   3                      decimalWeek += add;
+ 515   3                      if (decimalWeek > Week_TOP) {
+ 516   4                          decimalWeek = Week_BOTTOM;
+ 517   4                      } else if (decimalWeek < Week_BOTTOM) {
+ 518   4                          decimalWeek = Week_TOP;
+ 519   4                      }
+ 520   3                      DecimalToBCD(decimalWeek, &pClock->Week);
+ 521   3                  }
+ 522   2                  break;
+ 523   2              case 5:
+ 524   2                  // 时操作
+ 525   2                  {
+ 526   3                      unsigned char decimalHour;
+ 527   3                      BCDToDecimal(pClock->Hour, &decimalHour);
+ 528   3                      decimalHour += add;
+ 529   3                      if (decimalHour > Hour_TOP) {
+ 530   4                          decimalHour = Hour_BOTTOM;
+ 531   4                      } else if (decimalHour < Hour_BOTTOM) {
+ 532   4                          decimalHour = Hour_TOP;
+ 533   4                      }
+ 534   3                      DecimalToBCD(decimalHour, &pClock->Hour);
+ 535   3                  }
+ 536   2                  break;
+ 537   2              case 6:
+ 538   2                  // 分操作
+ 539   2                  {
+ 540   3                      unsigned char decimalMinute;
+ 541   3                      BCDToDecimal(pClock->Minute, &decimalMinute);
+ 542   3                      decimalMinute += add;
+ 543   3                      if (decimalMinute > 59) {
+ 544   4                          decimalMinute = 0;
+ 545   4                      } else if (decimalMinute < 0) {
+ 546   4                          decimalMinute = 59;
+ 547   4                      }
+ 548   3                      DecimalToBCD(decimalMinute, &pClock->Minute);
+ 549   3                  }
+ 550   2                  break;
+C51 COMPILER V9.59.0.0   LCD1602                                                           04/29/2026 18:27:09 PAGE 10  
+
+ 551   2              case 7:
+ 552   2                  // 秒操作
+ 553   2                  {
+ 554   3                      unsigned char decimalSecond;
+ 555   3                      BCDToDecimal(pClock->Second, &decimalSecond);
+ 556   3                      decimalSecond += add;
+ 557   3                      if (decimalSecond > 59) {
+ 558   4                          decimalSecond = 0;
+ 559   4                      } else if (decimalSecond < 0) {
+ 560   4                          decimalSecond = 59;
+ 561   4                      }
+ 562   3                      DecimalToBCD(decimalSecond, &pClock->Second);
+ 563   3                  }
+ 564   2          }
+ 565   1      }
+ 566          void LCD1602_Display_Clock(DAYTIME *pClock)
+ 567          {
+ 568   1          // 先BCD码转换为十进制
+ 569   1          unsigned char DateStr[11];
+ 570   1          unsigned char TimeStr[9];                         // 存储日期字符串，格式为 "YY/MM/DD/W"
+ 571   1          DateStr[0]  = ((pClock->Year >> 4) & 0x0F) + '0'; // 年十位
+ 572   1          DateStr[1]  = (pClock->Year & 0x0F) + '0';        // 年个位
+ 573   1          DateStr[2]  = '/';
+ 574   1          DateStr[3]  = ((pClock->Month >> 4) & 0x0F) + '0'; // 月十位
+ 575   1          DateStr[4]  = (pClock->Month & 0x0F) + '0';        // 月个位
+ 576   1          DateStr[5]  = '/';
+ 577   1          DateStr[6]  = ((pClock->Day >> 4) & 0 + 0x0F) + '0'; // 日十位
+ 578   1          DateStr[7]  = (pClock->Day & 0x0F) + '0';            // 日个位
+ 579   1          DateStr[8]  = '/';
+ 580   1          DateStr[9]  = (pClock->Week & 0x0F) + '0'; // 星期，显示为0-6
+ 581   1          DateStr[10] = '\0';                        // 字符串结束标志
+ 582   1      
+ 583   1          TimeStr[0] = ((pClock->Hour >> 4) & 0x0F) + '0'; // 时十位
+ 584   1          TimeStr[1] = (pClock->Hour & 0x0F) + '0';        // 时个位
+ 585   1          TimeStr[2] = ':';
+ 586   1          TimeStr[3] = ((pClock->Minute >> 4) & 0x0F) + '0'; // 分十位
+ 587   1          TimeStr[4] = (pClock->Minute & 0x0F) + '0';        // 分个位
+ 588   1          TimeStr[5] = ':';
+ 589   1          TimeStr[6] = ((pClock->Second >> 4) & 0x0F) + '0'; // 秒十位
+ 590   1          TimeStr[7] = (pClock->Second & 0x0F) + '0';        // 秒个位
+ 591   1          TimeStr[8] = '\0';                                 // 字符串结束标志
+ 592   1      
+ 593   1          LCD1602_Display_Str(LINE1 + 3, TimeStr); // 显示日期
+ 594   1          LCD1602_Display_Str(LINE2 + 3, DateStr); // 显示时间
+ 595   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    462    ----
-   CONSTANT SIZE    =     27    ----
+   CODE SIZE        =   1669    ----
+   CONSTANT SIZE    =     18    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =   ----      11
+   DATA SIZE        =   ----      36
    IDATA SIZE       =   ----    ----
-   BIT SIZE         =   ----    ----
+   BIT SIZE         =   ----       1
 END OF MODULE INFORMATION.
 
 

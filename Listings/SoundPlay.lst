@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   SOUNDPLAY                                                         04/18/2026 23:02:51 PAGE 1   
+C51 COMPILER V9.59.0.0   SOUNDPLAY                                                         04/29/2026 18:27:09 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE SOUNDPLAY
@@ -8,198 +8,278 @@ COMPILER INVOKED BY: C:\Users\Luna\AppData\Local\Keil_v5\C51\BIN\C51.EXE SoundPl
 
 line level    source
 
-   1          #include "STC15F2K60S2.H"
-   2          
-   3          //**************************************************************************
+   1          #include "SoundPlay.h"
+   2          #include "key.h"
+   3          #include "lcd1602.h"
    4          
-   5          #define SYSTEM_OSC  11059200UL // ¶¨Òå¾§ÕñÆµÂÊ£¬Ê¹ÓÃULÈ·±£ÎªÎŞ·ûºÅ³¤ÕûĞÍ
-   6          #define SOUND_SPACE 4 / 5      // ¶¨ÒåÆÕÍ¨Òô·ûÑİ×àµÄ³¤¶È·ÖÂÊ
-   7          sbit BeepIO = P1 ^ 6;          // ¶¨ÒåÊä³ö¹Ü½Å
-   8          typedef struct {
-   9              unsigned char *Sound;
-  10              unsigned char Signature;
-  11              unsigned Octachord;
-  12              unsigned int Speed;
-  13          } Music;
-  14          unsigned int code FreTab[12]    = {262, 277, 294, 311, 330, 349, 369, 392, 415, 440, 466, 494}; // Ô­Ê¼ÆµÂ
-             -Ê±í
-  15          unsigned char code SignTab[7]   = {0, 2, 4, 5, 7, 9, 11};                                       // 1~7ÔÚÆµ
-             -ÂÊ±íÖĞµÄÎ»ÖÃ
-  16          unsigned char code LengthTab[7] = {1, 2, 4, 8, 16, 32, 64};
-  17          unsigned int PlayTimeTotal;
-  18          unsigned char Sound_Temp_TH0, Sound_Temp_TL0; // Òô·û¶¨Ê±Æ÷³õÖµÔİ´æ
-  19          unsigned char Sound_Temp_TH1, Sound_Temp_TL1; // Òô³¤¶¨Ê±Æ÷³õÖµÔİ´æ
-  20          
-  21          //**************************************************************************
-  22          void InitialSound(void)
-  23          {
-  24   1      
-  25   1          unsigned int T1_Reload;
-  26   1          BeepIO = 1;
-  27   1          // ¶¨Ê±Æ÷1ÅäÖÃ
-  28   1          T1_Reload = 65536UL - (SYSTEM_OSC / 12 / 100);
-  29   1      
-  30   1          Sound_Temp_TH1 = T1_Reload / 256;
-  31   1          Sound_Temp_TL1 = T1_Reload % 256;
+   5          sbit BeepIO = P1 ^ 6;
+   6          
+   7          #define SYSTEM_OSC  11059200UL // å®šä¹‰æ™¶æŒ¯é¢‘ç‡ï¼Œä½¿ç”¨ULç¡®ä¿ä¸ºæ— ç¬¦å·é•¿æ•´å‹
+   8          #define SOUND_SPACE 4 / 5      // å®šä¹‰æ™®é€šéŸ³ç¬¦æ¼”å¥çš„é•¿åº¦åˆ†ç‡
+   9          
+  10          
+  11          typedef struct {
+  12              unsigned char code *Sound;
+  13              unsigned char Signature;
+  14              unsigned Octachord;
+  15              unsigned int Speed;
+  16          } Music;
+  17          // å®šä¹‰è¾“å‡ºç®¡è„š
+  18          unsigned int code FreTab[12]    = {262, 277, 294, 311, 330, 349, 369, 392, 415, 440, 466, 494}; // åŸå§‹é
+             -¢‘ç‡è¡¨
+  19          unsigned char code SignTab[7]   = {0, 2, 4, 5, 7, 9, 11};                                       // 1~7åœ¨é
+             -¢‘ç‡è¡¨ä¸­çš„ä½ç½®
+  20          unsigned char code LengthTab[7] = {1, 2, 4, 8, 16, 32, 64};
+  21          unsigned int idata PlayTimeTotal;
+  22          unsigned char idata Sound_Temp_TH0, Sound_Temp_TL0; // éŸ³ç¬¦å®šæ—¶å™¨åˆå€¼æš‚å­˜
+  23          unsigned char idata Sound_Temp_TH1, Sound_Temp_TL1; // éŸ³é•¿å®šæ—¶å™¨åˆå€¼æš‚å­˜
+  24          static unsigned int idata ResumePoint = 0;
+  25          static unsigned char code *LastSound  = 0;
+  26          
+  27          static void DisplayPlayTime(unsigned int seconds)
+  28          {
+  29   1          unsigned char minutes;
+  30   1          unsigned char secs;
+  31   1          unsigned char TimeStr[] = "00:00";
   32   1      
-  33   1          // ¶¨Ê±Æ÷ÅäÖÃ¼Ä´æÆ÷ÉèÖÃ
-  34   1          TMOD = 0x11; // T0ºÍT1¶¼ÉèÖÃÎªÄ£Ê½1 (16Î»¶¨Ê±Æ÷)
+  33   1          minutes = (unsigned char)((seconds / 60) % 100);
+  34   1          secs    = (unsigned char)(seconds % 60);
   35   1      
-  36   1          // STC15 AUXR¼Ä´æÆ÷ÉèÖÃ:
-  37   1          AUXR |= 0x80;  // T0ÉèÎª1T
-  38   1          AUXR &= ~0x40; // T1ÉèÎª12T
-  39   1      
-  40   1          TH1 = Sound_Temp_TH1;
-  41   1          TL1 = Sound_Temp_TL1;
-  42   1      
-  43   1          ET0 = 1;
-  44   1          ET1 = 0; // T1ÓÃÓÚ²éÑ¯£¬²»¿ªÆôÖĞ¶Ï
-  45   1          TR0 = 0;
-  46   1          TR1 = 0;
-  47   1          EA  = 1;
-  48   1      }
-  49          
-  50          void BeepTimer0(void) interrupt 1 // Òô·û·¢ÉúÖĞ¶Ï (T0)
-  51          {
-  52   1          BeepIO = !BeepIO;
-C51 COMPILER V9.59.0.0   SOUNDPLAY                                                         04/18/2026 23:02:51 PAGE 2   
+  36   1          TimeStr[0] = (minutes / 10) + '0';
+  37   1          TimeStr[1] = (minutes % 10) + '0';
+  38   1          TimeStr[3] = (secs / 10) + '0';
+  39   1          TimeStr[4] = (secs % 10) + '0';
+  40   1      
+  41   1          LCD1602_Display_Str(LINE1 + 5, TimeStr);
+  42   1      }
+  43          
+  44          static bit PauseRequested(void)
+  45          {
+  46   1          if (Key_Scan() == KEY12L) {
+  47   2              while (Key_Scan() != 0) {
+  48   3              }
+  49   2              return 1;
+  50   2          }
+  51   1          return 0;
+  52   1      }
+C51 COMPILER V9.59.0.0   SOUNDPLAY                                                         04/29/2026 18:27:09 PAGE 2   
 
-  53   1          // ÖØĞÂ¼ÓÔØ³õÖµ
-  54   1          TH0 = Sound_Temp_TH0;
-  55   1          TL0 = Sound_Temp_TL0;
-  56   1      }
-  57          
-  58          unsigned int getPlayTime(void)
-  59          {
-  60   1          return PlayTimeTotal;
-  61   1      }
-  62          
-  63          void Play(Music music)
-  64          {
-  65   1          unsigned char Signature = music.Signature;
-  66   1          unsigned char Octachord  = music.Octachord;
-  67   1          unsigned char Speed       = music.Speed;
-  68   1          unsigned char *Sound      = music.Sound;
-  69   1          unsigned int NewFreTab[12]; // ĞÂµÄÆµÂÊ±í
-  70   1          unsigned char i, j;
-  71   1          unsigned int Point, LDiv, LDiv0, LDiv1, LDiv2, LDiv4, CurrentFre, Temp_T, SoundLength;
-  72   1          unsigned char Tone, Length, SL, SH, SM, SLen, XG, FD;
-  73   1          unsigned char PlayTimeTotal = 0, PlayTimes = 0;
-  74   1      
+  53          
+  54          //**************************************************************************
+  55          void InitialSound(void)
+  56          {
+  57   1      
+  58   1          unsigned int T1_Reload;
+  59   1          BeepIO = 1;
+  60   1          // å®šæ—¶å™¨1é…ç½®
+  61   1          T1_Reload = 65536UL - (SYSTEM_OSC / 12 / 100);
+  62   1      
+  63   1          Sound_Temp_TH1 = T1_Reload / 256;
+  64   1          Sound_Temp_TL1 = T1_Reload % 256;
+  65   1      
+  66   1          // å®šæ—¶å™¨é…ç½®å¯„å­˜å™¨è®¾ç½®
+  67   1          TMOD = 0x11; // T0å’ŒT1éƒ½è®¾ç½®ä¸ºæ¨¡å¼1 (16ä½å®šæ—¶å™¨)
+  68   1      
+  69   1          // STC15 AUXRå¯„å­˜å™¨è®¾ç½®:
+  70   1          AUXR |= 0x80;  // T0è®¾ä¸º1T
+  71   1          AUXR &= ~0x40; // T1è®¾ä¸º12T
+  72   1      
+  73   1          TH1 = Sound_Temp_TH1;
+  74   1          TL1 = Sound_Temp_TL1;
   75   1      
-  76   1          for (i = 0; i < 12; i++) // ¸ù¾İµ÷ºÅ¼°Éı½µ°Ë¶ÈÀ´Éú³ÉĞÂµÄÆµÂÊ±í
-  77   1          {
-  78   2              j = i + Signature;
-  79   2              if (j > 11) {
-  80   3                  j            = j - 12;
-  81   3                  NewFreTab[i] = FreTab[j] * 2;
-  82   3              } else
-  83   2                  NewFreTab[i] = FreTab[j];
-  84   2      
-  85   2              if (Octachord == 1)
-  86   2                  NewFreTab[i] >>= 2; // ½µ°Ë¶È (³ıÒÔ4)
-  87   2              else if (Octachord == 3)
-  88   2                  NewFreTab[i] <<= 2; // Éı°Ë¶È (³ËÒÔ4)
-  89   2          }
-  90   1      
-  91   1          SoundLength = 0;
-  92   1          while (Sound[SoundLength] != 0x00) // ¼ÆËã¸èÇú³¤¶È
-  93   1          {
-  94   2              SoundLength += 2;
-  95   2          }
-  96   1      
-  97   1          Point  = 0;
-  98   1          Tone   = Sound[Point];
-  99   1          Length = Sound[Point + 1]; // ¶Á³öµÚÒ»¸öÒô·ûºÍËüÊ±Ê±Öµ
- 100   1      
- 101   1          LDiv0 = 12000 / Speed; // Ëã³ö1·ÖÒô·ûµÄ³¤¶È(µ¥Î»:10ms)  <-- ÕâÀï¼ÙÉè»ù×¼ÊÇ10ms
- 102   1          LDiv4 = LDiv0 / 4;     // Ëã³ö4·ÖÒô·ûµÄ³¤¶È
- 103   1          LDiv4 = LDiv4 - LDiv4 * SOUND_SPACE;
- 104   1      
- 105   1          TR0 = 0;
- 106   1          TR1 = 1;
- 107   1      
- 108   1          while (Point < SoundLength) {
- 109   2              SL = Tone % 10;      // ¼ÆËã³öÒô·û
- 110   2              SM = Tone / 10 % 10; // ¼ÆËã³ö¸ßµÍÒô
- 111   2              SH = Tone / 100;     // ¼ÆËã³öÊÇ·ñÉı°ë
- 112   2              if (SL != 0) {
- 113   3                  CurrentFre = NewFreTab[SignTab[SL - 1] + SH]; // ²é³ö¶ÔÓ¦Òô·ûµÄÆµÂÊ
- 114   3                  if (SM == 1) CurrentFre >>= 2;                // µÍÒô
-C51 COMPILER V9.59.0.0   SOUNDPLAY                                                         04/18/2026 23:02:51 PAGE 3   
+  76   1          ET0 = 1;
+  77   1          ET1 = 0; // T1ç”¨äºæŸ¥è¯¢ï¼Œä¸å¼€å¯ä¸­æ–­
+  78   1          TR0 = 0;
+  79   1          TR1 = 0;
+  80   1          EA  = 1;
+  81   1      }
+  82          
+  83          void BeepTimer0(void) interrupt 1 // éŸ³ç¬¦å‘ç”Ÿä¸­æ–­ (T0)
+  84          {
+  85   1          BeepIO = !BeepIO;
+  86   1          // é‡æ–°åŠ è½½åˆå€¼
+  87   1          TH0 = Sound_Temp_TH0;
+  88   1          TL0 = Sound_Temp_TL0;
+  89   1      }
+  90          
+  91          unsigned int getPlayTime(void)
+  92          {
+  93   1          return PlayTimeTotal;
+  94   1      }
+  95          
+  96          void resetPlayTime(void)
+  97          {
+  98   1          PlayTimeTotal = 0;
+  99   1      }
+ 100          
+ 101          void Play(unsigned char code *Sound, unsigned char Signature, unsigned Octachord, unsigned int Speed, bit 
+             -musicPlayFlag)
+ 102          {
+ 103   1          unsigned char i;
+ 104   1          unsigned int Point, LDiv, LDiv0, LDiv1, LDiv2, LDiv4, CurrentFre, Temp_T, SoundLength;
+ 105   1          unsigned char Tone, Length, SL, SH, SM, SLen, XG, FD;
+ 106   1          unsigned char PlayTimes = 0;
+ 107   1          unsigned char NoteIndex;
+ 108   1          bit UsePlayTimer;
+ 109   1      
+ 110   1          if (musicPlayFlag == 0) {
+ 111   2              TR0    = 0;
+ 112   2              TR1    = 0;
+ 113   2              BeepIO = 1;
+C51 COMPILER V9.59.0.0   SOUNDPLAY                                                         04/29/2026 18:27:09 PAGE 3   
 
- 115   3                  if (SM == 3) CurrentFre <<= 2;                // ¸ßÒô
- 116   3                  Temp_T         = 65536UL - (SYSTEM_OSC / CurrentFre / 2);
- 117   3                  Sound_Temp_TH0 = Temp_T / 256;
- 118   3                  Sound_Temp_TL0 = Temp_T % 256;
- 119   3                  TH0            = Sound_Temp_TH0;
- 120   3                  TL0            = Sound_Temp_TL0;
- 121   3              }
- 122   2      
- 123   2              SLen = LengthTab[Length % 10]; // Ëã³öÊÇ¼¸·ÖÒô·û
- 124   2              XG   = Length / 10 % 10;       // Ëã³öÒô·ûÀàĞÍ(0ÆÕÍ¨1Á¬Òô2¶ÙÒô)
- 125   2              FD   = Length / 100;           // ÓĞÎŞ·ûµã(0ÎŞ1ÓĞ)
- 126   2              LDiv = LDiv0 / SLen;           // Ëã³öÁ¬ÒôÒô·ûÑİ×àµÄ³¤¶È(¶àÉÙ¸ö10ms)
- 127   2              if (FD == 1)
- 128   2                  LDiv = LDiv + LDiv / 2;
- 129   2              if (XG != 1)
- 130   2                  if (XG == 0) // Ëã³öÆÕÍ¨Òô·ûµÄÑİ×à³¤¶È
- 131   2                      if (SLen <= 4)
- 132   2                          LDiv1 = LDiv - LDiv4;
- 133   2                      else
- 134   2                          LDiv1 = LDiv * SOUND_SPACE; // ÕûÊıÔËËã½á¹ûÎª0£¬¼´LDiv1=0
- 135   2                  else
- 136   2                      LDiv1 = LDiv / 2; // Ëã³ö¶ÙÒôµÄÑİ×à³¤¶È
- 137   2              else
- 138   2                  LDiv1 = LDiv;
- 139   2              if (SL == 0) LDiv1 = 0;
- 140   2              LDiv2 = LDiv - LDiv1; // Ëã³ö²»·¢ÒôµÄ³¤¶È
- 141   2              if (SL != 0) {
- 142   3                  TR0 = 1;
- 143   3                  for (i = LDiv1; i > 0; i--) // ·¢¹æ¶¨³¤¶ÈµÄÒô
- 144   3                  {
- 145   4                      while (TF1 == 0); // µÈ´ı10msµ½
- 146   4                      TH1 = Sound_Temp_TH1;
- 147   4                      TL1 = Sound_Temp_TL1;
- 148   4                      PlayTimes++;
- 149   4                      TF1 = 0;
- 150   4                  }
- 151   3              }
- 152   2              if (LDiv2 != 0) {
- 153   3                  TR0    = 0;
- 154   3                  BeepIO = 1;
- 155   3                  for (i = LDiv2; i > 0; i--) // Òô·û¼äµÄ¼ä¸ô
- 156   3                  {
- 157   4                      while (TF1 == 0);
- 158   4                      TH1 = Sound_Temp_TH1;
- 159   4                      TL1 = Sound_Temp_TL1;
- 160   4                      PlayTimes++;
- 161   4                      TF1 = 0;
- 162   4                  }
- 163   3              }
- 164   2              Point += 2;
- 165   2              Tone   = Sound[Point];
- 166   2              Length = Sound[Point + 1];
- 167   2              if (PlayTimes >= 99) {
- 168   3                  PlayTimes = 0;
- 169   3                  PlayTimeTotal++;
- 170   3              }
- 171   2          }
- 172   1          BeepIO = 1;
- 173   1          TR0    = 0;
- 174   1      }
+ 114   2              return;
+ 115   2          }
+ 116   1      
+ 117   1          SoundLength = 0;
+ 118   1          while (Sound[SoundLength] != 0x00) // è®¡ç®—æ­Œæ›²é•¿åº¦
+ 119   1          {
+ 120   2              SoundLength += 2;
+ 121   2          }
+ 122   1      
+ 123   1          UsePlayTimer = (SoundLength > 8);
+ 124   1      
+ 125   1          if (Sound != LastSound) {
+ 126   2              LastSound   = Sound;
+ 127   2              ResumePoint = 0;
+ 128   2          }
+ 129   1          if (ResumePoint >= SoundLength) {
+ 130   2              ResumePoint = 0;
+ 131   2          }
+ 132   1          if (ResumePoint == 0) {
+ 133   2              PlayTimeTotal = 0;
+ 134   2              if (UsePlayTimer) {
+ 135   3                  DisplayPlayTime(0);
+ 136   3              }
+ 137   2          }
+ 138   1      
+ 139   1          Point  = ResumePoint;
+ 140   1          Tone   = Sound[Point];
+ 141   1          Length = Sound[Point + 1]; // è¯»å‡ºç¬¬ä¸€ä¸ªéŸ³ç¬¦å’Œå®ƒæ—¶æ—¶å€¼
+ 142   1      
+ 143   1          LDiv0 = 12000 / Speed; // ç®—å‡º1åˆ†éŸ³ç¬¦çš„é•¿åº¦(å•ä½:10ms)  <-- è¿™é‡Œå‡è®¾åŸºå‡†æ˜¯10ms
+ 144   1          LDiv4 = LDiv0 / 4;     // ç®—å‡º4åˆ†éŸ³ç¬¦çš„é•¿åº¦
+ 145   1          LDiv4 = LDiv4 - LDiv4 * SOUND_SPACE;
+ 146   1      
+ 147   1          TR0 = 0;
+ 148   1          TR1 = 1;
+ 149   1      
+ 150   1          while (Point < SoundLength) {
+ 151   2              if (PauseRequested()) {
+ 152   3                  ResumePoint = Point;
+ 153   3                  TR0         = 0;
+ 154   3                  TR1         = 0;
+ 155   3                  BeepIO      = 1;
+ 156   3                  return;
+ 157   3              }
+ 158   2              SL = Tone % 10;      // è®¡ç®—å‡ºéŸ³ç¬¦
+ 159   2              SM = Tone / 10 % 10; // è®¡ç®—å‡ºé«˜ä½éŸ³
+ 160   2              SH = Tone / 100;     // è®¡ç®—å‡ºæ˜¯å¦å‡åŠ
+ 161   2              if (SL != 0) {
+ 162   3                  NoteIndex = SignTab[SL - 1] + SH;
+ 163   3                  if (NoteIndex + Signature > 11) {
+ 164   4                      CurrentFre = FreTab[NoteIndex + Signature - 12] * 2;
+ 165   4                  } else {
+ 166   4                      CurrentFre = FreTab[NoteIndex + Signature];
+ 167   4                  }
+ 168   3                  if (Octachord == 1)
+ 169   3                      CurrentFre >>= 2; // é™å…«åº¦
+ 170   3                  else if (Octachord == 3)
+ 171   3                      CurrentFre <<= 2;          // å‡å…«åº¦
+ 172   3                  if (SM == 1) CurrentFre >>= 2; // ä½éŸ³
+ 173   3                  if (SM == 3) CurrentFre <<= 2; // é«˜éŸ³
+ 174   3                  Temp_T         = 65536UL - (SYSTEM_OSC / CurrentFre / 2);
+ 175   3                  Sound_Temp_TH0 = Temp_T / 256;
+C51 COMPILER V9.59.0.0   SOUNDPLAY                                                         04/29/2026 18:27:09 PAGE 4   
 
+ 176   3                  Sound_Temp_TL0 = Temp_T % 256;
+ 177   3                  TH0            = Sound_Temp_TH0;
+ 178   3                  TL0            = Sound_Temp_TL0;
+ 179   3              }
+ 180   2      
+ 181   2              SLen = LengthTab[Length % 10]; // ç®—å‡ºæ˜¯å‡ åˆ†éŸ³ç¬¦
+ 182   2              XG   = Length / 10 % 10;       // ç®—å‡ºéŸ³ç¬¦ç±»å‹(0æ™®é€š1è¿éŸ³2é¡¿éŸ³)
+ 183   2              FD   = Length / 100;           // æœ‰æ— ç¬¦ç‚¹(0æ— 1æœ‰)
+ 184   2              LDiv = LDiv0 / SLen;           // ç®—å‡ºè¿éŸ³éŸ³ç¬¦æ¼”å¥çš„é•¿åº¦(å¤šå°‘ä¸ª10ms)
+ 185   2              if (FD == 1)
+ 186   2                  LDiv = LDiv + LDiv / 2;
+ 187   2              if (XG != 1)
+ 188   2                  if (XG == 0) // ç®—å‡ºæ™®é€šéŸ³ç¬¦çš„æ¼”å¥é•¿åº¦
+ 189   2                      if (SLen <= 4)
+ 190   2                          LDiv1 = LDiv - LDiv4;
+ 191   2                      else
+ 192   2                          LDiv1 = LDiv * SOUND_SPACE; // æ•´æ•°è¿ç®—ç»“æœä¸º0ï¼Œå³LDiv1=0
+ 193   2                  else
+ 194   2                      LDiv1 = LDiv / 2; // ç®—å‡ºé¡¿éŸ³çš„æ¼”å¥é•¿åº¦
+ 195   2              else
+ 196   2                  LDiv1 = LDiv;
+ 197   2              if (SL == 0) LDiv1 = 0;
+ 198   2              LDiv2 = LDiv - LDiv1; // ç®—å‡ºä¸å‘éŸ³çš„é•¿åº¦
+ 199   2              if (SL != 0) {
+ 200   3                  TR0 = 1;
+ 201   3                  for (i = LDiv1; i > 0; i--) // å‘è§„å®šé•¿åº¦çš„éŸ³
+ 202   3                  {
+ 203   4                      while (TF1 == 0); // ç­‰å¾…10msåˆ°
+ 204   4                      TH1 = Sound_Temp_TH1;
+ 205   4                      TL1 = Sound_Temp_TL1;
+ 206   4                      PlayTimes++;
+ 207   4                      TF1 = 0;
+ 208   4                      if (PauseRequested()) {
+ 209   5                          ResumePoint = Point;
+ 210   5                          TR0         = 0;
+ 211   5                          TR1         = 0;
+ 212   5                          BeepIO      = 1;
+ 213   5                          return;
+ 214   5                      }
+ 215   4                  }
+ 216   3              }
+ 217   2              if (LDiv2 != 0) {
+ 218   3                  TR0    = 0;
+ 219   3                  BeepIO = 1;
+ 220   3                  for (i = LDiv2; i > 0; i--) // éŸ³ç¬¦é—´çš„é—´éš”
+ 221   3                  {
+ 222   4                      while (TF1 == 0);
+ 223   4                      TH1 = Sound_Temp_TH1;
+ 224   4                      TL1 = Sound_Temp_TL1;
+ 225   4                      PlayTimes++;
+ 226   4                      TF1 = 0;
+ 227   4                      if (PauseRequested()) {
+ 228   5                          ResumePoint = Point;
+ 229   5                          TR0         = 0;
+ 230   5                          TR1         = 0;
+ 231   5                          BeepIO      = 1;
+ 232   5                          return;
+ 233   5                      }
+ 234   4                  }
+ 235   3              }
+ 236   2              Point += 2;
+ 237   2              Tone   = Sound[Point];
+C51 COMPILER V9.59.0.0   SOUNDPLAY                                                         04/29/2026 18:27:09 PAGE 5   
 
-C51 COMPILER V9.59.0.0   SOUNDPLAY                                                         04/18/2026 23:02:51 PAGE 4   
+ 238   2              Length = Sound[Point + 1];
+ 239   2              if (PlayTimes >= 99) {
+ 240   3                  PlayTimes = 0;
+ 241   3                  PlayTimeTotal++;
+ 242   3                  if (UsePlayTimer) {
+ 243   4                      DisplayPlayTime(PlayTimeTotal);
+ 244   4                  }
+ 245   3              }
+ 246   2          }
+ 247   1          ResumePoint = 0;
+ 248   1          BeepIO      = 1;
+ 249   1          TR0         = 0;
+ 250   1          TR1         = 0;
+ 251   1      }
+
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    831    ----
-   CONSTANT SIZE    =     38    ----
+   CODE SIZE        =   1109    ----
+   CONSTANT SIZE    =   3486    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =      6      60
-   IDATA SIZE       =   ----    ----
-   BIT SIZE         =   ----    ----
+   DATA SIZE        =      2      37
+   IDATA SIZE       =      8    ----
+   BIT SIZE         =   ----       2
 END OF MODULE INFORMATION.
 
 

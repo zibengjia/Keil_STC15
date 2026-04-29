@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   DS1302                                                            04/18/2026 23:02:51 PAGE 1   
+C51 COMPILER V9.59.0.0   DS1302                                                            04/29/2026 18:27:09 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DS1302
@@ -62,7 +62,7 @@ line level    source
   52          {
   53   1          unsigned char i;
   54   1          unsigned char temp;
-C51 COMPILER V9.59.0.0   DS1302                                                            04/18/2026 23:02:51 PAGE 2   
+C51 COMPILER V9.59.0.0   DS1302                                                            04/29/2026 18:27:09 PAGE 2   
 
   55   1          for (i = 0; i < 8; i++) // 8位计数器
   56   1          {
@@ -126,7 +126,7 @@ line level    source
  114   1      }
  115          /***********************************************
  116          函数名称：DS1302_WriteRAM
-C51 COMPILER V9.59.0.0   DS1302                                                            04/18/2026 23:02:51 PAGE 3   
+C51 COMPILER V9.59.0.0   DS1302                                                            04/29/2026 18:27:09 PAGE 3   
 
  117          功    能：向DS1302的RAM中写入数据函数
  118          入口参数：pBuf：指向设置值数据的指针
@@ -190,7 +190,7 @@ line level    source
  176   1          // 读取月
  177   1          pClock->Month = DS1302_ReadData(addr);
  178   1          addr += 2;
-C51 COMPILER V9.59.0.0   DS1302                                                            04/18/2026 23:02:51 PAGE 4   
+C51 COMPILER V9.59.0.0   DS1302                                                            04/29/2026 18:27:09 PAGE 4   
 
  179   1          // 读取星期
  180   1          pClock->Week = DS1302_ReadData(addr);
@@ -229,7 +229,7 @@ line level    source
  213   1          DS1302_WriteData(addr, pClock->Month);
  214   1          addr += 2;
  215   1          // 写入星期
- 216   1          DS1302_WriteData(addr, pClock->Week);
+ 216   1          DS1302_WriteData(addr, (pClock->Week));
  217   1          addr += 2;
  218   1          // 写入年
  219   1          DS1302_WriteData(addr, pClock->Year);
@@ -254,7 +254,7 @@ line level    source
  238   1          // 将P21 P22设置为准双向口
  239   1          P2M1 &= ~((1 << 1) | (1 << 2));
  240   1          P2M0 &= ~((1 << 1) | (1 << 2));
-C51 COMPILER V9.59.0.0   DS1302                                                            04/18/2026 23:02:51 PAGE 5   
+C51 COMPILER V9.59.0.0   DS1302                                                            04/29/2026 18:27:09 PAGE 5   
 
  241   1      
  242   1          // 初始化P44口为准双向口

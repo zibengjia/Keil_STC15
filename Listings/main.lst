@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   MAIN                                                              04/18/2026 23:02:50 PAGE 1   
+C51 COMPILER V9.59.0.0   MAIN                                                              04/29/2026 18:27:09 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
@@ -10,113 +10,279 @@ line level    source
 
    1          #include "main.h"
    2          
-   3          void main()
-   4          {
-   5   1          mode = setting;
-   6   1      
-   7   1          IO_Init();
-   8   1          LCD1602_Init();
-   9   1          HC595_Init();
-  10   1          DS1302_Init(&Clock);
-  11   1          InitialSound();
-  12   1          LED_Display();
-  13   1          while (1) {
-  14   2              Key_Process();
-  15   2              if ((UpdateTimeFlag == 1) && (mode !=ClockSet)) {
-  16   3                  UpdateTimeFlag = 0;
-  17   3                  DS1302_GetTime(&Clock);   // 读取时钟
-  18   3                  ToTimeDisplayBuf(&Clock); // 显示时钟
-  19   3              }
-  20   2          }
-  21   1      }
-  22          void timer2_isr(void) interrupt 12
-  23          {
-  24   1          // 10ms任务放这里
-  25   1          IE2 &= 0xFB; // 清中断标志
-  26   1          LED_Display();
-  27   1      }
-  28          void Delay1ms(unsigned int count)
-  29          {
-  30   1          unsigned int i, j;
-  31   1          for (i = 0; i < count; i++)
-  32   1              for (j = 0; j < 1200; j++);
-  33   1      }
-  34          void Key_Process(void)
-  35          {
-  36   1          unsigned char KeyNum;
-  37   1          if ((KeyNum = Key_Scan()) != 0) // 检测是否有键按下
-  38   1          {
-  39   2              switch (mode) {
-  40   3                  case KeyBoard:
-  41   3                      mode = KeyBoard;
-  42   3                      break;
-  43   3                  case MusicPlay:
-  44   3                      mode = MusicPlay;
-  45   3                      break;
-  46   3                  case AlarmSet:
-  47   3                      mode = AlarmSet;
-  48   3                      break;
-  49   3                  case ClockSet:
-  50   3                      mode = ClockSet;
-  51   3                      break;
-  52   3                  case setting:
-  53   3                      mode = setting;
-  54   3                      switch (KeyNum) {
-C51 COMPILER V9.59.0.0   MAIN                                                              04/18/2026 23:02:50 PAGE 2   
+   3          /*
+   4          |乐曲名           : 要播放的乐曲指针,结尾以(0,0)结束;
+   5          |调号(0-11)       :   是指乐曲升多少个半音演奏;
+   6          |升降八度(1-3)        : 1:降八度, 2:不升不降, 3:升八度;
+   7          |演奏速度(1-12000): 值越大速度越快;
+   8          */
+   9          
+  10          /* 键盘模式单音(音高, 音长, 结束符) */
+  11          unsigned char code KeyTone_Do[]  = {0x15, 0x03, 0x00, 0x00};
+  12          unsigned char code KeyTone_Re[]  = {0x16, 0x03, 0x00, 0x00};
+  13          unsigned char code KeyTone_Mi[]  = {0x17, 0x03, 0x00, 0x00};
+  14          unsigned char code KeyTone_Fa[]  = {0x18, 0x03, 0x00, 0x00};
+  15          unsigned char code KeyTone_Sol[] = {0x19, 0x03, 0x00, 0x00};
+  16          unsigned char code KeyTone_La[]  = {0x1A, 0x03, 0x00, 0x00};
+  17          unsigned char code KeyTone_Si[]  = {0x1B, 0x03, 0x00, 0x00};
+  18          
+  19          void main()
+  20          {
+  21   1          mode = ClockMode; // 初始模式为时钟模式
+  22   1          IO_Init();
+  23   1          DS1302_Init(&Clock);
+  24   1          InitialSound();
+  25   1          Timer2_Init();
+  26   1          LCD1602_Init();
+  27   1      
+  28   1          while (1) {
+  29   2              Key_Process();
+  30   2              if (UpdateTimeFlag == 1 && mode == ClockMode) { // 只有在时钟模式下才更新时间
+  31   3                  // 定时读取时钟
+  32   3                  DS1302_GetTime(&Clock);        // 读取时钟
+  33   3                  LCD1602_Display_Clock(&Clock); // 显示时钟
+  34   3                  UpdateTimeFlag = 0;
+  35   3              }
+  36   2          }
+  37   1      }
+  38          void timer2_isr(void) interrupt 12
+  39          {
+  40   1          static unsigned int T0_Cnt  = 0;
+  41   1          static unsigned char T1_Cnt = 0;
+  42   1          // 10ms
+  43   1      
+  44   1          T0_Cnt++;
+  45   1          if (T0_Cnt == 99) // 定时1000ms
+  46   1          {
+  47   2              UpdateTimeFlag = 1;
+  48   2              T0_Cnt         = 0;
+  49   2          }
+  50   1          if (mode == ClockSet) {
+  51   2              T1_Cnt++;
+  52   2              if (T1_Cnt > 24) // 定时250ms
+  53   2              {
+  54   3      
+C51 COMPILER V9.59.0.0   MAIN                                                              04/29/2026 18:27:09 PAGE 2   
 
-  55   4                          case KEY12:
-  56   4                              // 上翻
-  57   4                              if (menuIndex > 0) {
-  58   5                                  menuIndex--;
-  59   5                              }else {
-  60   5                                  menuIndex = menuNum - 1; // 循环到最后一个菜单项
-  61   5                              }
-  62   4                              LCD1602_Display_Str(LINE2, menuItems[menuIndex]); // 显示当前菜单项
-  63   4                              break;
-  64   4                          case KEY13:
-  65   4                              // 下翻
-  66   4                              if (menuIndex < menuNum - 1) {
-  67   5                                  menuIndex++;
-  68   5                              } else {
-  69   5                                  menuIndex = 0; // 循环到第一个菜单项
-  70   5                              }
-  71   4                              LCD1602_Display_Str(LINE2, menuItems[menuIndex]); // 显示当前菜单项
-  72   4                              break;
-  73   4                          case KEY12L:
-  74   4                              // 确认
-  75   4                              mode = menuIndex;
-  76   4                              break;
-  77   4                      }
-  78   3                      break;
-  79   3              }
-  80   2          }
-  81   1      }
-  82          void ToTimeDisplayBuf(DAYTIME *pClock)
-  83          {
-  84   1          DispBuf[7] = (pClock->Second) & 0x0f; // 秒低位
-  85   1          DispBuf[6] = (pClock->Second) >> 4;   // 秒高位
-  86   1      
-  87   1          DispBuf[5] = 32; //-
-  88   1      
-  89   1          DispBuf[4] = (pClock->Minute) & 0x0f;
-  90   1          ;                                          // 分钟低位
-  91   1          DispBuf[3] = (pClock->Minute & 0xf0) >> 4; // 分钟高位
-  92   1      
-  93   1          DispBuf[2] = 32; //-
-  94   1      
-  95   1          DispBuf[1] = (pClock->Hour) & 0x0f;      // 小时低位
-  96   1          DispBuf[0] = (pClock->Hour & 0xf0) >> 4; // 小时高位
-  97   1      }
+  55   3                  ToDateNonDispBuf(clockSetIndex); // 消隐当前设置项
+  56   3                  if (T1_Cnt > 49) {
+  57   4                      ToDateOrgDispBuf(clockSetIndex, &Clock); // 恢复显示当前设置项
+  58   4                      T1_Cnt = 0;
+  59   4                  }
+  60   3              }
+  61   2          }
+  62   1      }
+  63          void Delay1ms(unsigned int count)
+  64          {
+  65   1          unsigned int i, j;
+  66   1          for (i = 0; i < count; i++)
+  67   1              for (j = 0; j < 1200; j++);
+  68   1      }
+  69          void Key_Process(void)
+  70          {
+  71   1          unsigned char KeyNum;
+  72   1          static unsigned char speedKeyBoard   = 30; // 键盘模式下的演奏速度
+  73   1          static signed char signatureKeyBoard = 2;  // 键盘模式下的调号
+  74   1          if ((KeyNum = Key_Scan()) != 0)            // 检测是否有键按下
+  75   1          {
+  76   2              if (mode != setting) {
+  77   3                  if (KeyNum == KEY13L) {
+  78   4                      // 返回菜单
+  79   4                      mode = setting;
+  80   4                      LCD1602_Display_Str(LINE1, "Main Menu");
+  81   4                      LCD1602_Display_Str(LINE2, menuItems[menuIndex]); // 显示当前菜单项
+  82   4                  }
+  83   3                  switch (mode) {
+  84   4                      case ClockMode:
+  85   4                          // 时钟显示模式下按键处理
+  86   4                          if (KeyNum == KEY12L) {
+  87   5                              // 进入设置模式
+  88   5                              mode = setting;
+  89   5                              LCD1602_Display_Str(LINE1, "Main Menu");
+  90   5                              LCD1602_Display_Str(LINE2, menuItems[menuIndex]); // 显示当前菜单项
+  91   5                          }
+  92   4                          break;
+  93   4                      case KeyBoard:
+  94   4                          // 键盘演奏模式下按键处理
+  95   4                          switch (KeyNum) {
+  96   5                              case KEY14:
+  97   5                                  LCD1602_Display_Str(LINE2, "Do");
+  98   5                                  Play(KeyTone_Do, 0, signatureKeyBoard, speedKeyBoard, 1);
+  99   5      
+ 100   5                                  break;
+ 101   5                              case KEY9:
+ 102   5                                  LCD1602_Display_Str(LINE2, "Re");
+ 103   5                                  Play(KeyTone_Re, 0, signatureKeyBoard, speedKeyBoard, 1);
+ 104   5      
+ 105   5                                  break;
+ 106   5                              case KEY10:
+ 107   5                                  LCD1602_Display_Str(LINE2, "Mi");
+ 108   5                                  Play(KeyTone_Mi, 0, signatureKeyBoard, speedKeyBoard, 1);
+ 109   5      
+ 110   5                                  break;
+ 111   5                              case KEY11:
+ 112   5                                  LCD1602_Display_Str(LINE2, "Fa");
+ 113   5                                  Play(KeyTone_Fa, 0, signatureKeyBoard, speedKeyBoard, 1);
+ 114   5      
+ 115   5                                  break;
+ 116   5                              case KEY6:
+C51 COMPILER V9.59.0.0   MAIN                                                              04/29/2026 18:27:09 PAGE 3   
+
+ 117   5                                  LCD1602_Display_Str(LINE2, "Sol");
+ 118   5                                  Play(KeyTone_Sol, 0, signatureKeyBoard, speedKeyBoard, 1);
+ 119   5      
+ 120   5                                  break;
+ 121   5                              case KEY7:
+ 122   5                                  LCD1602_Display_Str(LINE2, "La");
+ 123   5                                  Play(KeyTone_La, 0, signatureKeyBoard, speedKeyBoard, 1);
+ 124   5      
+ 125   5                                  break;
+ 126   5                              case KEY8:
+ 127   5                                  LCD1602_Display_Str(LINE2, "Si");
+ 128   5                                  Play(KeyTone_Si, 0, signatureKeyBoard, speedKeyBoard, 1);
+ 129   5      
+ 130   5                                  break;
+ 131   5                          }
+ 132   4                          break;
+ 133   4                      case MusicPlay:
+ 134   4                          // 音乐播放模式下按键处理
+ 135   4                          switch (KeyNum) {
+ 136   5                              case KEY12:
+ 137   5                                  // 上一首
+ 138   5                                  if (MusicIndex > 0) {
+ 139   6                                      MusicIndex--;
+ 140   6                                  } else {
+ 141   6                                      MusicIndex = musicNum - 1; // 循环到最后一首
+ 142   6                                  }
+ 143   5                                  LCD1602_Display_Str(LINE2, MusicName[MusicIndex]); // 显示当前歌曲名称
+ 144   5                                  break;
+ 145   5                              case KEY13:
+ 146   5                                  // 下一首
+ 147   5                                  if (MusicIndex < musicNum - 1) {
+ 148   6                                      MusicIndex++;
+ 149   6                                  } else {
+ 150   6                                      MusicIndex = 0; // 循环到第一首
+ 151   6                                  }
+ 152   5                                  LCD1602_Display_Str(LINE2, MusicName[MusicIndex]); // 显示当前歌曲名称
+ 153   5                                  break;
+ 154   5                              case KEY12L:
+ 155   5                                  MusicPlayingFlag = 1; // 进入播放(播放中再次按KEY12L会在Play内部
+             -暂停)
+ 156   5                                  Play(MusicData[MusicIndex], 0, 2, 54, 1);
+ 157   5                                  MusicPlayingFlag = 0;
+ 158   5                                  break;
+ 159   5                          }
+ 160   4                          break;
+ 161   4                      case AlarmSet:
+ 162   4                          mode = AlarmSet;
+ 163   4                          break;
+ 164   4                      case ClockSet:
+ 165   4                          // 时钟校准模式下按键处理
+ 166   4      
+ 167   4                          switch (KeyNum) {
+ 168   5                              case KEY12:
+ 169   5                                  // 上翻
+ 170   5                                  if (clockSetIndex > 1) {
+ 171   6                                      ToDateOrgDispBuf(clockSetIndex, &Clock);
+ 172   6                                      clockSetIndex--;
+ 173   6                                  } else {
+ 174   6                                      ToDateOrgDispBuf(clockSetIndex, &Clock);
+ 175   6                                      clockSetIndex = 7; // 循环到最后一个设置项
+ 176   6                                  }
+ 177   5                                  break;
+C51 COMPILER V9.59.0.0   MAIN                                                              04/29/2026 18:27:09 PAGE 4   
+
+ 178   5                              case KEY13:
+ 179   5                                  // 下翻
+ 180   5                                  if (clockSetIndex < 7) {
+ 181   6                                      ToDateOrgDispBuf(clockSetIndex, &Clock);
+ 182   6                                      clockSetIndex++;
+ 183   6                                  } else {
+ 184   6                                      ToDateOrgDispBuf(clockSetIndex, &Clock);
+ 185   6                                      clockSetIndex = 1; // 循环到第一个设置项
+ 186   6                                  }
+ 187   5                                  break;
+ 188   5                              case KEY9:
+ 189   5                                  // 数字加
+ 190   5                                  TimeSet(clockSetIndex, &Clock, 1);
+ 191   5                                  ToDateOrgDispBuf(clockSetIndex, &Clock);
+ 192   5                                  break;
+ 193   5                              case KEY10:
+ 194   5      
+ 195   5                                  // 数字减
+ 196   5                                  TimeSet(clockSetIndex, &Clock, 0);
+ 197   5                                  ToDateOrgDispBuf(clockSetIndex, &Clock);
+ 198   5                                  break;
+ 199   5                              case KEY12L:
+ 200   5                                  // 确认修改当前设置项
+ 201   5                                  DS1302_SetTime(&Clock);
+ 202   5                                  LCD1602_Display_Str(LINE1 + 12, "Set!");
+ 203   5                                  Delay1ms(300);
+ 204   5                                  LCD1602_Display_Clock(&Clock);
+ 205   5                                  break;
+ 206   5                          }
+ 207   4                          break;
+ 208   4                  }
+ 209   3              } else {
+ 210   3                  switch (KeyNum) {
+ 211   4                      case KEY12:
+ 212   4                          // 上翻
+ 213   4                          if (menuIndex > 0) {
+ 214   5                              menuIndex--;
+ 215   5                          } else {
+ 216   5                              menuIndex = menuNum - 1; // 循环到最后一个菜单项
+ 217   5                          }
+ 218   4                          LCD1602_Display_Str(LINE2, menuItems[menuIndex]); // 显示当前菜单项
+ 219   4                          break;
+ 220   4                      case KEY13:
+ 221   4                          // 下翻
+ 222   4                          if (menuIndex < menuNum - 1) {
+ 223   5                              menuIndex++;
+ 224   5                          } else {
+ 225   5                              menuIndex = 0; // 循环到第一个菜单项
+ 226   5                          }
+ 227   4                          LCD1602_Display_Str(LINE2, menuItems[menuIndex]); // 显示当前菜单项
+ 228   4                          break;
+ 229   4                      case KEY13L:
+ 230   4                          // 返回初始界面
+ 231   4                          mode = ClockMode;
+ 232   4                          break;
+ 233   4                      case KEY12L:
+ 234   4                          // 确认
+ 235   4                          mode = menuIndex;
+ 236   4                          switch (mode) {
+ 237   5                              case KeyBoard:
+ 238   5                                  LCD1602_Display_Str(LINE2, "KeyBoard Mode");
+ 239   5                                  break;
+C51 COMPILER V9.59.0.0   MAIN                                                              04/29/2026 18:27:09 PAGE 5   
+
+ 240   5                              case MusicPlay:
+ 241   5                                  LCD1602_Display_Str(LINE1, "Music:");
+ 242   5                                  LCD1602_Display_Str(LINE2, MusicName[MusicIndex]); // 显示当前歌曲名称
+ 243   5                                  break;
+ 244   5                              case ClockSet:
+ 245   5                                  DS1302_GetTime(&Clock);        // 读取时钟
+ 246   5                                  LCD1602_Display_Clock(&Clock); // 显示时钟
+ 247   5                                  break;
+ 248   5                              case AlarmSet:
+ 249   5                                  LCD1602_Display_Str(LINE2, "AlarmSet Mode");
+ 250   5                                  break;
+ 251   5                          }
+ 252   4                          break;
+ 253   4                  }
+ 254   3              }
+ 255   2          }
+ 256   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    338    ----
-   CONSTANT SIZE    =   3569    ----
+   CODE SIZE        =    926    ----
+   CONSTANT SIZE    =    227    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =     88    ----
+   DATA SIZE        =     50       1
    IDATA SIZE       =   ----    ----
-   BIT SIZE         =      1    ----
+   BIT SIZE         =      2    ----
 END OF MODULE INFORMATION.
 
 
