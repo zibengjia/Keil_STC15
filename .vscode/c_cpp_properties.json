@@ -3,7 +3,7 @@
         {
             "name": "Target_1",
             "includePath": [
-                "c:\\Users\\Luna\\Desktop\\计算机应用系统综合设计\\project\\code\\Keil_STC15"
+                "c:\\Users\\zibj\\Desktop\\Project\\Keil_STC15"
             ],
             "defines": [
                 "__C51__",
