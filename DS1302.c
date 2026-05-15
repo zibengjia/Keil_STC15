@@ -1,8 +1,8 @@
 #include "ds1302.h"
 #include <intrins.h>
 // 秒    分    时    日    月   星期   年
-// 初始化时间				  				//0	    30	  8	     2	   1	   1	  17
-unsigned char code Init[7] = {0x00, 0x30, 0x08, 0x02, 0x01, 0x01, 0x17};
+// 初始化时间				  				//0	    30	  8	     1	   5	   5	  26
+unsigned char code Init[7] = {0x00, 0x30, 0x08, 0x01, 0x05, 0x05, 0x17};
 
 /***********************************************
 函数名称：Delay_us

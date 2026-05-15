@@ -24,7 +24,6 @@ void main()
     InitialSound();
     Timer2_Init();
     LCD1602_Init();
-
     while (1) {
         Key_Process();
         if (UpdateTimeFlag == 1 && mode == ClockMode) { // 只有在时钟模式下才更新时间
@@ -153,8 +152,39 @@ void Key_Process(void)
                             break;
                         case KEY12L:
                             MusicPlayingFlag = 1; // 进入播放(播放中再次按KEY12L会在Play内部暂停)
-                            Play(MusicData[MusicIndex], 0, 2, 54, 1);
+                            Play(MusicData[MusicIndex], 0, octachord, playSpeed, 1);
+                            LCD1602_Add_Str(LINE1, "Music:");
+                            LCD1602_Add_UChar(LINE1 + 13, playSpeed, 3); // 显示当前速度
                             MusicPlayingFlag = 0;
+                            break;
+                        case KEY9:
+                            // 升八度
+                            octachord = 3;
+                            LCD1602_Add_Str(LINE1 + 11, "3");
+                            break;
+                        case KEY10:
+                            // 不升不降
+                            octachord = 2;
+                            LCD1602_Add_Str(LINE1 + 11, "2");
+                            break;
+                        case KEY11:
+                            // 降八度
+                            octachord = 1;
+                            LCD1602_Add_Str(LINE1 + 11, "1");
+                            break;
+                        case KEY6:
+                            // 加快速度
+                            if (playSpeed < 12000) {
+                                playSpeed += 3;
+                            }
+                            LCD1602_Add_UChar(LINE1 + 13, playSpeed, 3);
+                            break;
+                        case KEY7:
+                            // 减慢速度
+                            if (playSpeed > 10) {
+                                playSpeed -= 3;
+                            }
+                            LCD1602_Add_UChar(LINE1 + 13, playSpeed, 3);
                             break;
                     }
                     break;
@@ -240,6 +270,8 @@ void Key_Process(void)
                         case MusicPlay:
                             LCD1602_Display_Str(LINE1, "Music:");
                             LCD1602_Display_Str(LINE2, MusicName[MusicIndex]); // 显示当前歌曲名称
+                            LCD1602_Add_Str(LINE1 + 11, "2");                  // 显示默认八度
+                            LCD1602_Add_UChar(LINE1 + 13, playSpeed, 3);       // 显示当前速度
                             break;
                         case ClockSet:
                             DS1302_GetTime(&Clock);        // 读取时钟

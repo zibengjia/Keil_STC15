@@ -125,9 +125,20 @@ void LCD1602_Clear_Line(unsigned char line)
 ************************************************/
 void LCD1602_Display_Str(unsigned char addr, unsigned char *str)
 {
-    LCD1602_Clear_Line(addr);
+    LCD1602_Clear_Line(addr & 0xC0); // 根据地址清除对应行
+    LCD1602_CheckBusy();
+    LCD1602_WriteCMD(addr);
 
-    // 设置地址
+    while (*str != '\0') // 未到字符串末尾
+    {
+        LCD1602_CheckBusy();
+        LCD1602_WriteDAT(*str);
+        str++;
+    }
+}
+
+void LCD1602_Add_Str(unsigned char addr, unsigned char *str)
+{
     LCD1602_CheckBusy();
     LCD1602_WriteCMD(addr);
 
@@ -234,6 +245,27 @@ void App_FormatDec(unsigned char *pstr, unsigned char value)
     }
 }
 
+/**
+ * 函数名称：LCD1602_Display_UChar
+ * 功    能：在指定地址显示无符号字符型数值（十进制，3位，不改变后续字符）
+ * 入口参数：addr: 显示地址，value: 要显示的无符号字符数值,size: 显示的位数（1-3）
+ * 返回值：无
+ * 备注：使用 App_FormatDec 将数值格式化为3字符数字并添加结束符，然后调用 LCD1602_Display_Str 显示
+ */
+void LCD1602_Display_UChar(unsigned char addr, unsigned char value, unsigned char size)
+{
+    unsigned char buf[4];
+    App_FormatDec(buf, value); // 格式化为3位数字（不含结束符）
+    buf[size] = '\0';          // 添加字符串结束符
+    LCD1602_Display_Str(addr, buf);
+}
+void LCD1602_Add_UChar(unsigned char addr, unsigned char value, unsigned char size)
+{
+    unsigned char buf[4];
+    App_FormatDec(buf, value); // 格式化为3位数字（不含结束符）
+    buf[size] = '\0';          // 添加字符串结束符
+    LCD1602_Add_Str(addr, buf);
+}
 /***********************************************
 函数名称：HEX2ASCII
 功    能：4位十六进制数转ASCII字符

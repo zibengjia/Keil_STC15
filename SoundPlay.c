@@ -7,7 +7,6 @@ sbit BeepIO = P1 ^ 6;
 #define SYSTEM_OSC  11059200UL // 定义晶振频率，使用UL确保为无符号长整型
 #define SOUND_SPACE 4 / 5      // 定义普通音符演奏的长度分率
 
-
 typedef struct {
     unsigned char code *Sound;
     unsigned char Signature;
@@ -38,7 +37,7 @@ static void DisplayPlayTime(unsigned int seconds)
     TimeStr[3] = (secs / 10) + '0';
     TimeStr[4] = (secs % 10) + '0';
 
-    LCD1602_Display_Str(LINE1 + 5, TimeStr);
+    LCD1602_Add_Str(LINE1 + 5, TimeStr);
 }
 
 static bit PauseRequested(void)

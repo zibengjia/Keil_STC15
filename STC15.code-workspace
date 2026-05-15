@@ -33,7 +33,8 @@
             "Chun",
             "Delayms"
         ],
-        "Codegeex.RepoIndex": true
+        "Codegeex.RepoIndex": true,
+        "commentTranslate.source": "Copilot"
     },
     "extensions": {
         "recommendations": [

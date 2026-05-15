@@ -46,7 +46,11 @@ sbit EN = P3 ^ 7; // 读写数据使能   0：停止 1：启动
 
 // 函数声明
 void LCD1602_Init(void);
+void LCD1602_Clear_Line(unsigned char line);
 void LCD1602_Display_Str(unsigned char addr, unsigned char *str);
+void LCD1602_Add_Str(unsigned char addr, unsigned char *str);
+void LCD1602_Display_UChar(unsigned char addr, unsigned char value, unsigned char size);
+void LCD1602_Add_UChar(unsigned char addr, unsigned char value, unsigned char size);
 void App_FormatDec(unsigned char *pstr, unsigned char value);
 void ToDateNonDispBuf(unsigned char set);
 void ToDateOrgDispBuf(unsigned char set, DAYTIME *pClock);
