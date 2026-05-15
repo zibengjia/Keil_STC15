@@ -74,5 +74,5 @@ void DS1302_WriteData(unsigned char addr, unsigned char dat);
 void DS1302_GetTime(DAYTIME *pClock);
 void DS1302_SetTime(DAYTIME *pClock);
 void DS1302_Init(DAYTIME *pClock);
-
+void Timer2_Init(void);
 #endif

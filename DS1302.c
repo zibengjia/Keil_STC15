@@ -2,7 +2,7 @@
 #include <intrins.h>
 // 秒    分    时    日    月   星期   年
 // 初始化时间				  				//0	    30	  8	     1	   5	   5	  26
-unsigned char code Init[7] = {0x00, 0x30, 0x08, 0x01, 0x05, 0x05, 0x17};
+unsigned char code Init[7] = {0x00, 0x30, 0x08, 0x01, 0x05, 0x05, 0x26};
 
 /***********************************************
 函数名称：Delay_us
@@ -274,4 +274,18 @@ void DS1302_Init(DAYTIME *pClock)
             DS1302_WriteRAM(Init);
         }
     }
+}
+void Timer2_Init(void)
+{
+    // 12T模式，定时器模式
+    AUXR &= 0xFB; // 12T
+    AUXR &= 0xF7; // 定时模式
+
+    // 10ms初值计算：65536 - 11059200/12 * 0.01 = 65536 - 9216 = 56320
+    T2H = 0xDC; // 高8位
+    T2L = 0x00; // 低8位
+
+    IE2 |= 0x04;  // 使能T2中断
+    AUXR |= 0x10; // 启动T2
+    EA = 1;       // 开总中断
 }

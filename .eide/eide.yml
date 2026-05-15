@@ -13,14 +13,13 @@ virtualFolder:
         - path: main.c
         - path: SoundPlay.c
         - path: SoundPlay.h
-        - path: key.c
-        - path: key.h
         - path: DS1302.c
         - path: DS1302.h
-        - path: hc595.c
-        - path: hc595.h
+        - path: key.c
+        - path: key.h
         - path: lcd1602.c
         - path: lcd1602.h
+        - path: main.h
       folders: []
 dependenceList: []
 outDir: build
@@ -31,15 +30,11 @@ targets:
     cppPreprocessAttrs:
       defineList: []
       incList:
-        - ../../../../../Keil_v5/C51/INC/STC
-        - ../../../../../../../Keil_v5/C51/INC/STC
-        - ../../../../../../../Keil_v5/C51/INC/Atmel
-        - ../../../../../../../Keil_v5/C51/INC
+        - ../../../AppData/Local/Keil_v5/C51/INC/STC
       libList:
-        - ../../../../../../../Keil_v5/C51/INC/STC
+        - ../../../AppData/Local/Keil_v5/C51/INC
     excludeList: []
-    settings:
-      debugger: unknown
+    settings: {}
     toolchain: Keil_C51
     toolchainConfigMap:
       Keil_C51:
@@ -61,6 +56,11 @@ targets:
     uploadConfigMap:
       Custom:
         bin: ""
-        commandLine: ""
+        commandLine: python ./tools/stcflash.py -p ${port} "${programFile}"
         eraseChipCommand: ""
-    uploader: Custom
+      stcgal:
+        bin: ""
+        eepromImgPath: "null"
+        extraOptions: ""
+        options: .eide/stc.flash.json
+    uploader: stcgal
