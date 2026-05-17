@@ -201,7 +201,7 @@ void LCD1602_Init(void)
     LCD1602_WriteCMD(0x0c); // 显示开及光标设置
 
     // 显示欢迎信息
-    LCD1602_Display_Str(LINE1 + 3, "MainMenu");
+    LCD1602_Display_Str(LINE1 + 3, "Music Player");
     LCD1602_Display_Str(LINE2 + 4, "Welcome!");
 }
 /***********************************************
