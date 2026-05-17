@@ -23,15 +23,14 @@ enum Mode {
     KeyBoard = 0,
     MusicPlay,
     ClockSet,
-    AlarmSet,
     setting,
     ClockMode,
 } mode;
 unsigned char menuIndex              = 0;
-char code *code menuItems[]          = {"1.KeyBoard", "2.MusicPlay", "3.ClockSet", "4.AlarmSet"}; // 菜单项名称数组（使用code存储在程序存储器）
-unsigned char menuNum                = 4;
-bit UpdateTimeFlag                   = 0; // 更新时间标志
-bit MusicPlayingFlag                 = 0; // 音乐播放标志
+char code *code menuItems[]          = {"1.KeyBoard", "2.MusicPlay", "3.ClockSet"}; // 菜单项名称数组（使用code存储在程序存储器）
+unsigned char menuNum                = 3;                                           // 菜单项数量
+bit UpdateTimeFlag                   = 0;                                           // 更新时间标志
+bit MusicPlayingFlag                 = 0;                                           // 音乐播放标志
 unsigned char MusicIndex             = 0;
 unsigned char playSpeed              = 54;
 unsigned char octachord              = 2;

@@ -188,9 +188,6 @@ void Key_Process(void)
                             break;
                     }
                     break;
-                case AlarmSet:
-                    mode = AlarmSet;
-                    break;
                 case ClockSet:
                     // 时钟校准模式下按键处理
 
@@ -276,9 +273,6 @@ void Key_Process(void)
                         case ClockSet:
                             DS1302_GetTime(&Clock);        // 读取时钟
                             LCD1602_Display_Clock(&Clock); // 显示时钟
-                            break;
-                        case AlarmSet:
-                            LCD1602_Display_Str(LINE2, "AlarmSet Mode");
                             break;
                     }
                     break;
